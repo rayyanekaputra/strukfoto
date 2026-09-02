@@ -5,109 +5,108 @@
   <title>strukfoto — thermal receipt filter</title>
 </head>
 <body>
-  <h1>strukfoto</h1>
-  <h3><a href="https://saweria.co/rayyanekaputra" target="_blank">https://saweria.co/rayyanekaputra</a></h3>
+    <h1>strukfoto // album receipt generator</h1>
+      <h3><a href="https://saweria.co/rayyanekaputra" target="_blank">https://saweria.co/rayyanekaputra</a></h3>
 
-  <div>
-    <label>upload photo: <input type="file" id="imageInput" accept="image/*"></label>
-    <button id="clearBtn" disabled>clear photo</button>
-  </div>
-  <br>
+      <div>
+        <label>photo upload: <input type="file" id="imageInput" accept="image/*"></label>
+        <button id="clearBtn" disabled>clear image</button>
+      </div>
+      <br>
 
-  <!-- Export & Canvas Aspect Ratio Controls -->
-  <fieldset>
-    <legend><strong>Share & Export Aspect Ratio</strong></legend>
-    <div>
-      <label>Aspect Ratio:
-        <select id="aspectInput">
-          <option value="1:1">1:1 Square (Instagram Post / 1080x1080)</option>
-          <option value="9:16">9:16 Story (IG / TikTok / 1080x1920)</option>
-          <option value="native">Native (Fit Receipt Paper + Transparent Canvas)</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label><input type="checkbox" id="transparentBgInput"> Transparent Card Background (1:1 / 9:16)</label>
-    </div>
-  </fieldset>
-  <br>
+      <!-- Export & Canvas Aspect Ratio Controls -->
+      <fieldset>
+        <legend><strong>share & export aspect ratio</strong></legend>
+        <div>
+          <label>aspect ratio:
+            <select id="aspectInput">
+              <option value="1:1">1:1 square (instagram post / 1080x1080)</option>
+              <option value="9:16">9:16 story (ig / tiktok / 1080x1920)</option>
+              <option value="native">native (fit receipt paper + transparent canvas)</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label><input type="checkbox" id="transparentBgInput"> transparent card background (1:1 / 9:16)</label>
+        </div>
+      </fieldset>
+      <br>
 
-  <!-- Receipt Content & Layout Controls -->
-  <fieldset>
-    <legend><strong>Album Receipt Content & Layout</strong></legend>
-    <div>
-      <label>Photo Position:
-        <select id="imagePosInput">
-          <option value="top">Top (Classic Receipt / Under Header)</option>
-          <option value="middle">Middle (Between Items & Summary)</option>
-          <option value="bottom">Bottom (Above Barcode / Event Ticket Style)</option>
-          <option value="background">Background Watermark (Behind Text)</option>
-        </select>
-      </label>
-    </div>
-    <br>
-    <div><label>Header Title: <input type="text" id="headerTitle" value="STRUKFOTO"></label></div>
-    <div><label>Subtitle: <input type="text" id="headerSub" value="THE ALBUM RECEIPT"></label></div>
-    <br>
-    <div><label>Track 1: <input type="text" class="track-input" value="01. STARGAZING - TRAVIS SCOTT"></label></div>
-    <div><label>Track 2: <input type="text" class="track-input" value="02. BLINDING LIGHTS - THE WEEKND"></label></div>
-    <div><label>Track 3: <input type="text" class="track-input" value="03. REDRUM - 21 SAVAGE"></label></div>
-    <div><label>Track 4: <input type="text" class="track-input" value="04. MIDNIGHT CITY - M83"></label></div>
-    <div><label>Track 5: <input type="text" class="track-input" value="05. FE!N - TRAVIS SCOTT"></label></div>
-  </fieldset>
-  <br>
+      <!-- Receipt Content & Layout Controls -->
+      <fieldset>
+        <legend><strong>album receipt content & layout</strong></legend>
+        <div>
+          <label>photo position:
+            <select id="imagePosInput">
+              <option value="top">top (classic receipt / under header)</option>
+              <option value="middle">middle (between items & summary)</option>
+              <option value="bottom">bottom (above barcode / event ticket style)</option>
+              <option value="background">background watermark (behind text)</option>
+            </select>
+          </label>
+        </div>
+        <br>
+        <div><label>header title: <input type="text" id="headerTitle" value="STRUKFOTO"></label></div>
+        <div><label>subtitle: <input type="text" id="headerSub" value="THE ALBUM RECEIPT"></label></div>
+        <br>
+        <div><label>track 1: <input type="text" class="track-input" value="01. STARGAZING - TRAVIS SCOTT"></label></div>
+        <div><label>track 2: <input type="text" class="track-input" value="02. BLINDING LIGHTS - THE WEEKND"></label></div>
+        <div><label>track 3: <input type="text" class="track-input" value="03. REDRUM - 21 SAVAGE"></label></div>
+        <div><label>track 4: <input type="text" class="track-input" value="04. MIDNIGHT CITY - M83"></label></div>
+        <div><label>track 5: <input type="text" class="track-input" value="05. FE!N - TRAVIS SCOTT"></label></div>
+      </fieldset>
+      <br>
 
-  <!-- Thermal Controls -->
-  <fieldset>
-    <legend><strong>Thermal Filter Controls</strong></legend>
-    <div><label>Print Width (px): <input type="range" id="widthInput" min="280" max="650" value="450"> <span id="widthVal">450</span></label></div>
-    <div><label>Contrast: <input type="range" id="contrastInput" min="0.5" max="3.5" step="0.1" value="1.8"> <span id="contrastVal">1.8</span></label></div>
-    <div><label>Brightness: <input type="range" id="brightnessInput" min="0.5" max="2.0" step="0.1" value="1.0"> <span id="brightVal">1.0</span></label></div>
-    <div>
-      <label>Dither Mode:
-        <select id="ditherInput">
-          <option value="bayer8">Bayer 8x8</option>
-          <option value="bayer4">Bayer 4x4</option>
-          <option value="threshold">Simple Threshold</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label>Color Palette:
-        <select id="paletteInput">
-          <option value="cream">Classic Cream</option>
-          <option value="aged">Aged Yellow</option>
-          <option value="blue">Blue Thermal</option>
-          <option value="bw">Stark B&W</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label>Receipt Element Transparency:
-        <select id="transparencyInput">
-          <option value="none">Solid (Paper + Ink)</option>
-          <option value="paper">Transparent Paper (Ink Only)</option>
-          <option value="ink">Transparent Ink (Paper Only)</option>
-        </select>
-      </label>
-    </div>
-    <div><label>Dead Pin Glitches: <input type="range" id="dropoutsInput" min="0" max="0.05" step="0.002" value="0.012"> <span id="dropoutsVal">0.012</span></label></div>
-    <div><label><input type="checkbox" id="tearInput" checked> Serrated Paper Tear Edge</label></div>
-  </fieldset>
-  <br>
+      <!-- Thermal Controls -->
+      <fieldset>
+        <legend><strong>thermal filter controls</strong></legend>
+        <div><label>print width (px): <input type="range" id="widthInput" min="280" max="650" value="450"> <span id="widthVal">450</span></label></div>
+        <div><label>contrast: <input type="range" id="contrastInput" min="0.5" max="3.5" step="0.1" value="1.8"> <span id="contrastVal">1.8</span></label></div>
+        <div><label>brightness: <input type="range" id="brightnessInput" min="0.5" max="2.0" step="0.1" value="1.0"> <span id="brightVal">1.0</span></label></div>
+        <div>
+          <label>dither mode:
+            <select id="ditherInput">
+              <option value="bayer8">bayer 8x8</option>
+              <option value="bayer4">bayer 4x4</option>
+              <option value="threshold">simple threshold</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>color palette:
+            <select id="paletteInput">
+              <option value="cream">classic cream</option>
+              <option value="aged">aged yellow</option>
+              <option value="blue">blue thermal</option>
+              <option value="bw">stark b&w</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>receipt element transparency:
+            <select id="transparencyInput">
+              <option value="none">solid (paper + ink)</option>
+              <option value="paper">transparent paper (ink only)</option>
+              <option value="ink">transparent ink (paper only)</option>
+            </select>
+          </label>
+        </div>
+        <div><label>dead pin glitches: <input type="range" id="dropoutsInput" min="0" max="0.05" step="0.002" value="0.012"> <span id="dropoutsVal">0.012</span></label></div>
+        <div><label><input type="checkbox" id="tearInput" checked> serrated paper tear edge</label></div>
+      </fieldset>
+      <br>
 
-  <div>
-    <button id="resetBtn">Reset Controls</button>
-    <button id="downloadBtn" disabled>Download PNG</button>
-  </div>
-  <br>
+      <div>
+        <button id="resetBtn">reset controls</button>
+        <button id="downloadBtn" disabled>download png</button>
+      </div>
+      <br>
 
-  <!-- Canvas Render Target -->
-  <div>
-    <h3>Shareable Preview</h3>
-    <canvas id="receiptCanvas" style="max-width: 100%; height: auto; border: 1px solid #444; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"></canvas>
-  </div>
-
+      <!-- Canvas Render Target -->
+      <div>
+        <h3>shareable preview</h3>
+        <canvas id="receiptCanvas" style="max-width: 100%; height: auto; border: 1px solid #444; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"></canvas>
+      </div>
 <script src="./core_logic.js"></script>
 </body>
 </html>
