@@ -16,13 +16,18 @@
   <!-- Export & Canvas Aspect Ratio Controls -->
   <fieldset>
     <legend><strong>Share & Export Aspect Ratio</strong></legend>
-    <label>Aspect Ratio:
-      <select id="aspectInput">
-        <option value="1:1">1:1 Square (Instagram Post / 1080x1080)</option>
-        <option value="9:16">9:16 Story (IG / TikTok / 1080x1920)</option>
-        <option value="native">Native (Fit Receipt Paper + Transparent Canvas)</option>
-      </select>
-    </label>
+    <div>
+      <label>Aspect Ratio:
+        <select id="aspectInput">
+          <option value="1:1">1:1 Square (Instagram Post / 1080x1080)</option>
+          <option value="9:16">9:16 Story (IG / TikTok / 1080x1920)</option>
+          <option value="native">Native (Fit Receipt Paper + Transparent Canvas)</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label><input type="checkbox" id="transparentBgInput"> Transparent Card Background (1:1 / 9:16)</label>
+    </div>
   </fieldset>
   <br>
 
@@ -66,7 +71,7 @@
       </label>
     </div>
     <div>
-      <label>Transparency Mode:
+      <label>Receipt Element Transparency:
         <select id="transparencyInput">
           <option value="none">Solid (Paper + Ink)</option>
           <option value="paper">Transparent Paper (Ink Only)</option>
@@ -94,7 +99,8 @@
   <script>
     const DEFAULTS = {
       width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
-      palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true, aspect: '1:1'
+      palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true,
+      aspect: '1:1', transparentBg: false
     };
 
     const PALETTES = {
@@ -120,6 +126,7 @@
       imageInput: document.getElementById('imageInput'),
       clearBtn: document.getElementById('clearBtn'),
       aspectInput: document.getElementById('aspectInput'),
+      transparentBgInput: document.getElementById('transparentBgInput'),
       headerTitle: document.getElementById('headerTitle'),
       headerSub: document.getElementById('headerSub'),
       trackInputs: document.querySelectorAll('.track-input'),
@@ -152,7 +159,6 @@
       elements.dropoutsVal.textContent = elements.dropoutsInput.value;
     }
 
-    // Dynamic Barcode Drawing (Scales with margin)
     function drawBarcode(cCtx, y, width, margin, barHeight) {
       cCtx.fillStyle = '#000000';
       let x = margin;
@@ -177,8 +183,9 @@
       const dropoutDensity = parseFloat(elements.dropoutsInput.value);
       const showTear = elements.tearInput.checked;
       const aspect = elements.aspectInput.value;
+      const transparentCardBg = elements.transparentBgInput.checked;
 
-      // --- Responsive Scaling Constants based on printWidth ---
+      // Responsive Constants
       const scale = printWidth / 450.0;
       const margin = Math.round(20 * scale);
       const fontSizeTitle = Math.max(12, Math.round(20 * scale));
@@ -187,13 +194,11 @@
       const lineHeight = Math.round(18 * scale);
       const barcodeHeight = Math.round(35 * scale);
 
-      // Estimate maximum characters per line for current printWidth
       const charWidth = fontSizeBody * 0.6;
       const maxChars = Math.max(18, Math.floor((printWidth - margin * 2) / charWidth));
       const dividerLine = '='.repeat(maxChars);
       const subDividerLine = '-'.repeat(maxChars);
 
-      // Calculate photo and canvas height dynamically
       const usablePhotoWidth = printWidth - margin * 2;
       const photoHeight = loadedImage ? Math.round((loadedImage.height / loadedImage.width) * usablePhotoWidth) : 0;
 
@@ -204,13 +209,12 @@
         barcodeHeight + Math.round(30 * scale)
       );
 
-      // Offscreen canvas for raw un-dithered receipt layout
+      // Raw un-dithered layout canvas
       const paperCanvas = document.createElement('canvas');
       paperCanvas.width = printWidth;
       paperCanvas.height = paperHeight;
       const pCtx = paperCanvas.getContext('2d');
 
-      // Base background (white for 1-bit dithering math)
       pCtx.fillStyle = '#FFFFFF';
       pCtx.fillRect(0, 0, printWidth, paperHeight);
       pCtx.fillStyle = '#000000';
@@ -218,7 +222,6 @@
 
       let curY = Math.round(25 * scale);
 
-      // Header Block
       pCtx.font = `bold ${fontSizeTitle}px "Courier New", monospace`;
       pCtx.fillText(elements.headerTitle.value.toUpperCase(), printWidth / 2, curY);
       curY += lineHeight;
@@ -235,13 +238,11 @@
       pCtx.fillText(`DATE: 2026-09-02      REC #: ${Math.floor(1000 + Math.random() * 9000)}`, margin, curY);
       curY += lineHeight;
 
-      // Draw Uploaded Photo
       if (loadedImage) {
         pCtx.drawImage(loadedImage, margin, curY, usablePhotoWidth, photoHeight);
         curY += photoHeight + Math.round(15 * scale);
       }
 
-      // Tracklist Items
       pCtx.fillText(subDividerLine, margin, curY);
       curY += lineHeight;
       pCtx.fillText('ITEM / TRACK DESCRIPTION        QTY', margin, curY);
@@ -266,13 +267,12 @@
       pCtx.fillText(`AUTH CODE:                   #SF2026`, margin, curY);
       curY += Math.round(22 * scale);
 
-      // Barcode & Footer
       drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight);
       curY += barcodeHeight + Math.round(15 * scale);
       pCtx.textAlign = 'center';
       pCtx.fillText('THANK YOU FOR LISTENING', printWidth / 2, curY);
 
-      // --- Dithering & Transparency Pass ---
+      // Dithering & Transparency Processing
       const srcData = pCtx.getImageData(0, 0, printWidth, paperHeight).data;
       const ditherCanvas = document.createElement('canvas');
       ditherCanvas.width = printWidth;
@@ -297,18 +297,18 @@
         for (let x = 0; x < printWidth; x++) {
           const idx = (y * printWidth + x) * 4;
 
-          // 1. Serrated Tear Edge
+          // 1. Serrated Tear Edge Cutout
           if (showTear) {
             const toothSize = 12;
             const toothDepth = 6;
             const toothY = Math.floor(Math.abs(Math.sin((x / toothSize) * Math.PI)) * toothDepth);
             if (y < toothY || y >= (paperHeight - toothDepth + toothY)) {
-              out[idx + 3] = 0; // Transparent
+              out[idx + 3] = 0;
               continue;
             }
           }
 
-          // 2. Dead Pin Glitch Lines
+          // 2. Dead Pin Lines
           if (isDeadRow) {
             if (transparencyMode === 'paper') {
               out[idx + 3] = 0;
@@ -321,7 +321,7 @@
             continue;
           }
 
-          // 3. Luminance & Contrast Math
+          // 3. Luminance & Contrast
           const r = srcData[idx];
           const g = srcData[idx + 1];
           const b = srcData[idx + 2];
@@ -330,7 +330,7 @@
           norm = (norm - 0.5) * contrast + 0.5;
           norm = Math.min(1.0, Math.max(0.0, norm));
 
-          // 4. Threshold / Bayer Matrix Lookups
+          // 4. Bayer Matrix Threshold Lookups
           let threshold = 0.5;
           if (ditherMode === 'bayer4') {
             threshold = BAYER_4X4[y % 4][x % 4] / 16.0;
@@ -340,10 +340,10 @@
 
           const isPaper = norm > threshold;
 
-          // 5. Apply Palette + Transparency Matrix
+          // 5. Palette & Transparency Matrix
           if (isPaper) {
             if (transparencyMode === 'paper') {
-              out[idx + 3] = 0; // Hide paper, show ink only
+              out[idx + 3] = 0;
             } else {
               out[idx]     = palette.paper[0];
               out[idx + 1] = palette.paper[1];
@@ -352,7 +352,7 @@
             }
           } else {
             if (transparencyMode === 'ink') {
-              out[idx + 3] = 0; // Hide ink, show paper only
+              out[idx + 3] = 0;
             } else {
               out[idx]     = palette.ink[0];
               out[idx + 1] = palette.ink[1];
@@ -364,7 +364,7 @@
       }
       dCtx.putImageData(outImgData, 0, 0);
 
-      // --- Shareable Card Output Compositing ---
+      // Compositing Output
       if (aspect === 'native') {
         elements.canvas.width = printWidth;
         elements.canvas.height = paperHeight;
@@ -377,11 +377,13 @@
         elements.canvas.width = finalW;
         elements.canvas.height = finalH;
 
-        // Dark background card
-        ctx.fillStyle = '#121212';
-        ctx.fillRect(0, 0, finalW, finalH);
+        if (transparentCardBg) {
+          ctx.clearRect(0, 0, finalW, finalH);
+        } else {
+          ctx.fillStyle = '#121212';
+          ctx.fillRect(0, 0, finalW, finalH);
+        }
 
-        // Responsive Scaling to fit receipt inside social card frame
         const maxDisplayW = finalW * 0.82;
         const maxDisplayH = finalH * 0.88;
         const fitScale = Math.min(maxDisplayW / printWidth, maxDisplayH / paperHeight, 2.0);
@@ -391,7 +393,6 @@
         const destX = Math.round((finalW - dispW) / 2);
         const destY = Math.round((finalH - dispH) / 2);
 
-        // Keep dithered dots crisp on scaled preview
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(ditherCanvas, destX, destY, dispW, dispH);
       }
@@ -411,6 +412,7 @@
       elements.dropoutsInput.value = DEFAULTS.dropouts;
       elements.tearInput.checked = DEFAULTS.tear;
       elements.aspectInput.value = DEFAULTS.aspect;
+      elements.transparentBgInput.checked = DEFAULTS.transparentBg;
 
       render();
     });
@@ -441,7 +443,8 @@
       elements.widthInput, elements.contrastInput, elements.brightnessInput,
       elements.ditherInput, elements.paletteInput, elements.transparencyInput,
       elements.dropoutsInput, elements.tearInput, elements.aspectInput,
-      elements.headerTitle, elements.headerSub, ...elements.trackInputs
+      elements.transparentBgInput, elements.headerTitle, elements.headerSub,
+      ...elements.trackInputs
     ].forEach(input => {
       input.addEventListener('input', render);
     });
