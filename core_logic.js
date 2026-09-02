@@ -199,6 +199,8 @@ const DEFAULTS = {
       curY += barcodeHeight + Math.round(15 * scale);
       pCtx.textAlign = 'center';
       pCtx.fillText('THANK YOU FOR LISTENING', printWidth / 2, curY);
+      pCtx.fillText('https://strukfoto.download/', printWidth / 2, curY+12);
+
 
       // Dithering & Transparency Processing
       const srcData = pCtx.getImageData(0, 0, printWidth, paperHeight).data;
