@@ -2,61 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Thermal Receipt Filter</title>
+  <title>strukfoto — thermal receipt filter</title>
 </head>
 <body>
-  <h1>Thermal Receipt Generator</h1>
+  <h1>strukfoto // album receipt generator</h1>
 
   <div>
-    <label>Select Image: <input type="file" id="imageInput" accept="image/*"></label>
+    <label>Photo Upload: <input type="file" id="imageInput" accept="image/*"></label>
     <button id="clearBtn" disabled>Clear Image</button>
   </div>
   <br>
 
-  <!-- Controls -->
-  <div>
-    <label>Print Width (px): <input type="range" id="widthInput" min="200" max="800" value="450"> <span id="widthVal">450</span></label>
-  </div>
-  <div>
-    <label>Contrast: <input type="range" id="contrastInput" min="0.5" max="3.5" step="0.1" value="1.7"> <span id="contrastVal">1.7</span></label>
-  </div>
-  <div>
-    <label>Brightness: <input type="range" id="brightnessInput" min="0.5" max="2.0" step="0.1" value="1.0"> <span id="brightVal">1.0</span></label>
-  </div>
-  <div>
-    <label>Dither Mode:
-      <select id="ditherInput">
-        <option value="bayer8">Bayer 8x8</option>
-        <option value="bayer4">Bayer 4x4</option>
-        <option value="threshold">Simple Threshold</option>
+  <!-- Export & Canvas Aspect Ratio Controls -->
+  <fieldset>
+    <legend><strong>Share & Export Aspect Ratio</strong></legend>
+    <label>Aspect Ratio:
+      <select id="aspectInput">
+        <option value="1:1">1:1 Square (Instagram Post / 1080x1080)</option>
+        <option value="9:16">9:16 Story (IG / TikTok / 1080x1920)</option>
+        <option value="native">Native (Fit Receipt Paper + Transparent Canvas)</option>
       </select>
     </label>
-  </div>
-  <div>
-    <label>Color Palette:
-      <select id="paletteInput">
-        <option value="cream">Classic Cream</option>
-        <option value="aged">Aged Yellow</option>
-        <option value="blue">Blue Thermal</option>
-        <option value="bw">Stark B&W</option>
-      </select>
-    </label>
-  </div>
-  <div>
-    <label>Transparency Mode:
-      <select id="transparencyInput">
-        <option value="none">Solid (Paper + Ink)</option>
-        <option value="paper">Transparent Paper (Ink Only)</option>
-        <option value="ink">Transparent Ink (Paper Only)</option>
-      </select>
-    </label>
-  </div>
-  <div>
-    <label>Dead Pin Glitches: <input type="range" id="dropoutsInput" min="0" max="0.05" step="0.002" value="0.015"> <span id="dropoutsVal">0.015</span></label>
-  </div>
-  <div>
-    <label><input type="checkbox" id="tearInput" checked> Serrated Tear Edge</label>
-  </div>
+  </fieldset>
+  <br>
+
+  <!-- Receipt Content Controls -->
+  <fieldset>
+    <legend><strong>Album Receipt Content</strong></legend>
+    <div><label>Header Title: <input type="text" id="headerTitle" value="STRUKFOTO"></label></div>
+    <div><label>Subtitle: <input type="text" id="headerSub" value="THE ALBUM RECEIPT"></label></div>
+    <br>
+    <div><label>Track 1: <input type="text" class="track-input" value="01. STARGAZING - TRAVIS SCOTT"></label></div>
+    <div><label>Track 2: <input type="text" class="track-input" value="02. BLINDING LIGHTS - THE WEEKND"></label></div>
+    <div><label>Track 3: <input type="text" class="track-input" value="03. REDRUM - 21 SAVAGE"></label></div>
+    <div><label>Track 4: <input type="text" class="track-input" value="04. MIDNIGHT CITY - M83"></label></div>
+    <div><label>Track 5: <input type="text" class="track-input" value="05. FE!N - TRAVIS SCOTT"></label></div>
+  </fieldset>
+  <br>
+
+  <!-- Thermal Controls -->
+  <fieldset>
+    <legend><strong>Thermal Filter Controls</strong></legend>
+    <div><label>Print Width (px): <input type="range" id="widthInput" min="280" max="650" value="450"> <span id="widthVal">450</span></label></div>
+    <div><label>Contrast: <input type="range" id="contrastInput" min="0.5" max="3.5" step="0.1" value="1.8"> <span id="contrastVal">1.8</span></label></div>
+    <div><label>Brightness: <input type="range" id="brightnessInput" min="0.5" max="2.0" step="0.1" value="1.0"> <span id="brightVal">1.0</span></label></div>
+    <div>
+      <label>Dither Mode:
+        <select id="ditherInput">
+          <option value="bayer8">Bayer 8x8</option>
+          <option value="bayer4">Bayer 4x4</option>
+          <option value="threshold">Simple Threshold</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Color Palette:
+        <select id="paletteInput">
+          <option value="cream">Classic Cream</option>
+          <option value="aged">Aged Yellow</option>
+          <option value="blue">Blue Thermal</option>
+          <option value="bw">Stark B&W</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Transparency Mode:
+        <select id="transparencyInput">
+          <option value="none">Solid (Paper + Ink)</option>
+          <option value="paper">Transparent Paper (Ink Only)</option>
+          <option value="ink">Transparent Ink (Paper Only)</option>
+        </select>
+      </label>
+    </div>
+    <div><label>Dead Pin Glitches: <input type="range" id="dropoutsInput" min="0" max="0.05" step="0.002" value="0.012"> <span id="dropoutsVal">0.012</span></label></div>
+    <div><label><input type="checkbox" id="tearInput" checked> Serrated Paper Tear Edge</label></div>
+  </fieldset>
   <br>
 
   <div>
@@ -65,29 +85,16 @@
   </div>
   <br>
 
-  <!-- Dual Image Preview Section -->
-  <div style="display: flex; gap: 20px; align-items: flex-start;">
-    <div>
-      <h3>Original Preview</h3>
-      <img id="inputPreview" style="max-width: 400px; display: none;" alt="Original Upload Preview">
-    </div>
-
-    <div>
-      <h3>Thermal Receipt Output</h3>
-      <canvas id="receiptCanvas" style="background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"></canvas>
-    </div>
+  <!-- Canvas Render Target -->
+  <div>
+    <h3>Shareable Preview</h3>
+    <canvas id="receiptCanvas" style="max-width: 100%; height: auto; border: 1px solid #444; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"></canvas>
   </div>
 
   <script>
     const DEFAULTS = {
-      width: '450',
-      contrast: '1.7',
-      brightness: '1.0',
-      dither: 'bayer8',
-      palette: 'cream',
-      transparency: 'none',
-      dropouts: '0.015',
-      tear: true
+      width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
+      palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true, aspect: '1:1'
     };
 
     const PALETTES = {
@@ -98,27 +105,24 @@
     };
 
     const BAYER_4X4 = [
-      [ 0,  8,  2, 10],
-      [12,  4, 14,  6],
-      [ 3, 11,  1,  9],
-      [15,  7, 13,  5]
+      [ 0,  8,  2, 10], [12,  4, 14,  6],
+      [ 3, 11,  1,  9], [15,  7, 13,  5]
     ];
 
     const BAYER_8X8 = [
-      [ 0, 32,  8, 40,  2, 34, 10, 42],
-      [48, 16, 56, 24, 50, 18, 58, 26],
-      [12, 44,  4, 36, 14, 46,  6, 38],
-      [60, 28, 52, 20, 62, 30, 54, 22],
-      [ 3, 35, 11, 43,  1, 33,  9, 41],
-      [51, 19, 59, 27, 49, 17, 57, 25],
-      [15, 47,  7, 39, 13, 45,  5, 37],
-      [63, 31, 55, 23, 61, 29, 53, 21]
+      [ 0, 32,  8, 40,  2, 34, 10, 42], [48, 16, 56, 24, 50, 18, 58, 26],
+      [12, 44,  4, 36, 14, 46,  6, 38], [60, 28, 52, 20, 62, 30, 54, 22],
+      [ 3, 35, 11, 43,  1, 33,  9, 41], [51, 19, 59, 27, 49, 17, 57, 25],
+      [15, 47,  7, 39, 13, 45,  5, 37], [63, 31, 55, 23, 61, 29, 53, 21]
     ];
 
     const elements = {
       imageInput: document.getElementById('imageInput'),
       clearBtn: document.getElementById('clearBtn'),
-      inputPreview: document.getElementById('inputPreview'),
+      aspectInput: document.getElementById('aspectInput'),
+      headerTitle: document.getElementById('headerTitle'),
+      headerSub: document.getElementById('headerSub'),
+      trackInputs: document.querySelectorAll('.track-input'),
       widthInput: document.getElementById('widthInput'),
       widthVal: document.getElementById('widthVal'),
       contrastInput: document.getElementById('contrastInput'),
@@ -148,12 +152,23 @@
       elements.dropoutsVal.textContent = elements.dropoutsInput.value;
     }
 
+    // Dynamic Barcode Drawing (Scales with margin)
+    function drawBarcode(cCtx, y, width, margin, barHeight) {
+      cCtx.fillStyle = '#000000';
+      let x = margin;
+      const endX = width - margin;
+      while (x < endX) {
+        const barW = Math.floor(Math.random() * 3) + 1;
+        const gap = Math.floor(Math.random() * 3) + 1;
+        cCtx.fillRect(x, y, barW, barHeight);
+        x += barW + gap;
+      }
+    }
+
     function render() {
-      if (!loadedImage) return;
       updateLabels();
 
       const printWidth = parseInt(elements.widthInput.value, 10);
-      const printHeight = Math.round((loadedImage.height / loadedImage.width) * printWidth);
       const contrast = parseFloat(elements.contrastInput.value);
       const brightness = parseFloat(elements.brightnessInput.value);
       const ditherMode = elements.ditherInput.value;
@@ -161,46 +176,139 @@
       const transparencyMode = elements.transparencyInput.value;
       const dropoutDensity = parseFloat(elements.dropoutsInput.value);
       const showTear = elements.tearInput.checked;
+      const aspect = elements.aspectInput.value;
 
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = printWidth;
-      offCanvas.height = printHeight;
-      const offCtx = offCanvas.getContext('2d');
-      offCtx.drawImage(loadedImage, 0, 0, printWidth, printHeight);
+      // --- Responsive Scaling Constants based on printWidth ---
+      const scale = printWidth / 450.0;
+      const margin = Math.round(20 * scale);
+      const fontSizeTitle = Math.max(12, Math.round(20 * scale));
+      const fontSizeSub = Math.max(9, Math.round(12 * scale));
+      const fontSizeBody = Math.max(10, Math.round(13 * scale));
+      const lineHeight = Math.round(18 * scale);
+      const barcodeHeight = Math.round(35 * scale);
 
-      const srcData = offCtx.getImageData(0, 0, printWidth, printHeight).data;
+      // Estimate maximum characters per line for current printWidth
+      const charWidth = fontSizeBody * 0.6;
+      const maxChars = Math.max(18, Math.floor((printWidth - margin * 2) / charWidth));
+      const dividerLine = '='.repeat(maxChars);
+      const subDividerLine = '-'.repeat(maxChars);
 
-      elements.canvas.width = printWidth;
-      elements.canvas.height = printHeight;
-      const outImgData = ctx.createImageData(printWidth, printHeight);
-      const out = outImgData.data;
+      // Calculate photo and canvas height dynamically
+      const usablePhotoWidth = printWidth - margin * 2;
+      const photoHeight = loadedImage ? Math.round((loadedImage.height / loadedImage.width) * usablePhotoWidth) : 0;
 
-      const numDropouts = Math.floor(printHeight * dropoutDensity);
-      if (lastHeight !== printHeight || cachedDeadRows.length !== numDropouts) {
-        const rows = new Set();
-        while (rows.size < numDropouts && numDropouts > 0) {
-          rows.add(Math.floor(Math.random() * printHeight));
-        }
-        cachedDeadRows = Array.from(rows);
-        lastHeight = printHeight;
+      const paperHeight = Math.round(
+        (lineHeight * 6) +
+        (photoHeight ? photoHeight + Math.round(15 * scale) : 0) +
+        (lineHeight * (elements.trackInputs.length + 6)) +
+        barcodeHeight + Math.round(30 * scale)
+      );
+
+      // Offscreen canvas for raw un-dithered receipt layout
+      const paperCanvas = document.createElement('canvas');
+      paperCanvas.width = printWidth;
+      paperCanvas.height = paperHeight;
+      const pCtx = paperCanvas.getContext('2d');
+
+      // Base background (white for 1-bit dithering math)
+      pCtx.fillStyle = '#FFFFFF';
+      pCtx.fillRect(0, 0, printWidth, paperHeight);
+      pCtx.fillStyle = '#000000';
+      pCtx.textAlign = 'center';
+
+      let curY = Math.round(25 * scale);
+
+      // Header Block
+      pCtx.font = `bold ${fontSizeTitle}px "Courier New", monospace`;
+      pCtx.fillText(elements.headerTitle.value.toUpperCase(), printWidth / 2, curY);
+      curY += lineHeight;
+
+      pCtx.font = `${fontSizeSub}px "Courier New", monospace`;
+      pCtx.fillText(`[ ${elements.headerSub.value.toUpperCase()} ]`, printWidth / 2, curY);
+      curY += lineHeight;
+
+      pCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+      pCtx.fillText(dividerLine, printWidth / 2, curY);
+      curY += lineHeight;
+
+      pCtx.textAlign = 'left';
+      pCtx.fillText(`DATE: 2026-09-02      REC #: ${Math.floor(1000 + Math.random() * 9000)}`, margin, curY);
+      curY += lineHeight;
+
+      // Draw Uploaded Photo
+      if (loadedImage) {
+        pCtx.drawImage(loadedImage, margin, curY, usablePhotoWidth, photoHeight);
+        curY += photoHeight + Math.round(15 * scale);
       }
 
-      for (let y = 0; y < printHeight; y++) {
+      // Tracklist Items
+      pCtx.fillText(subDividerLine, margin, curY);
+      curY += lineHeight;
+      pCtx.fillText('ITEM / TRACK DESCRIPTION        QTY', margin, curY);
+      curY += lineHeight;
+      pCtx.fillText(subDividerLine, margin, curY);
+      curY += lineHeight;
+
+      elements.trackInputs.forEach((input) => {
+        if (input.value.trim() !== '') {
+          let text = input.value.toUpperCase();
+          if (text.length > maxChars - 4) text = text.substring(0, maxChars - 4);
+          const dots = '.'.repeat(Math.max(1, maxChars - text.length - 2));
+          pCtx.fillText(`${text} ${dots} 1`, margin, curY);
+          curY += lineHeight;
+        }
+      });
+
+      pCtx.fillText(subDividerLine, margin, curY);
+      curY += lineHeight;
+      pCtx.fillText(`TOTAL TRACKS:                      5`, margin, curY);
+      curY += lineHeight;
+      pCtx.fillText(`AUTH CODE:                   #SF2026`, margin, curY);
+      curY += Math.round(22 * scale);
+
+      // Barcode & Footer
+      drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight);
+      curY += barcodeHeight + Math.round(15 * scale);
+      pCtx.textAlign = 'center';
+      pCtx.fillText('THANK YOU FOR LISTENING', printWidth / 2, curY);
+
+      // --- Dithering & Transparency Pass ---
+      const srcData = pCtx.getImageData(0, 0, printWidth, paperHeight).data;
+      const ditherCanvas = document.createElement('canvas');
+      ditherCanvas.width = printWidth;
+      ditherCanvas.height = paperHeight;
+      const dCtx = ditherCanvas.getContext('2d');
+      const outImgData = dCtx.createImageData(printWidth, paperHeight);
+      const out = outImgData.data;
+
+      const numDropouts = Math.floor(paperHeight * dropoutDensity);
+      if (lastHeight !== paperHeight || cachedDeadRows.length !== numDropouts) {
+        const rows = new Set();
+        while (rows.size < numDropouts && numDropouts > 0) {
+          rows.add(Math.floor(Math.random() * paperHeight));
+        }
+        cachedDeadRows = Array.from(rows);
+        lastHeight = paperHeight;
+      }
+
+      for (let y = 0; y < paperHeight; y++) {
         const isDeadRow = cachedDeadRows.includes(y);
 
         for (let x = 0; x < printWidth; x++) {
           const idx = (y * printWidth + x) * 4;
 
+          // 1. Serrated Tear Edge
           if (showTear) {
             const toothSize = 12;
             const toothDepth = 6;
             const toothY = Math.floor(Math.abs(Math.sin((x / toothSize) * Math.PI)) * toothDepth);
-            if (y < toothY || y >= (printHeight - toothDepth + toothY)) {
-              out[idx + 3] = 0;
+            if (y < toothY || y >= (paperHeight - toothDepth + toothY)) {
+              out[idx + 3] = 0; // Transparent
               continue;
             }
           }
 
+          // 2. Dead Pin Glitch Lines
           if (isDeadRow) {
             if (transparencyMode === 'paper') {
               out[idx + 3] = 0;
@@ -213,6 +321,7 @@
             continue;
           }
 
+          // 3. Luminance & Contrast Math
           const r = srcData[idx];
           const g = srcData[idx + 1];
           const b = srcData[idx + 2];
@@ -221,6 +330,7 @@
           norm = (norm - 0.5) * contrast + 0.5;
           norm = Math.min(1.0, Math.max(0.0, norm));
 
+          // 4. Threshold / Bayer Matrix Lookups
           let threshold = 0.5;
           if (ditherMode === 'bayer4') {
             threshold = BAYER_4X4[y % 4][x % 4] / 16.0;
@@ -230,9 +340,10 @@
 
           const isPaper = norm > threshold;
 
+          // 5. Apply Palette + Transparency Matrix
           if (isPaper) {
             if (transparencyMode === 'paper') {
-              out[idx + 3] = 0;
+              out[idx + 3] = 0; // Hide paper, show ink only
             } else {
               out[idx]     = palette.paper[0];
               out[idx + 1] = palette.paper[1];
@@ -241,7 +352,7 @@
             }
           } else {
             if (transparencyMode === 'ink') {
-              out[idx + 3] = 0;
+              out[idx + 3] = 0; // Hide ink, show paper only
             } else {
               out[idx]     = palette.ink[0];
               out[idx + 1] = palette.ink[1];
@@ -251,13 +362,45 @@
           }
         }
       }
+      dCtx.putImageData(outImgData, 0, 0);
 
-      ctx.putImageData(outImgData, 0, 0);
+      // --- Shareable Card Output Compositing ---
+      if (aspect === 'native') {
+        elements.canvas.width = printWidth;
+        elements.canvas.height = paperHeight;
+        ctx.clearRect(0, 0, printWidth, paperHeight);
+        ctx.drawImage(ditherCanvas, 0, 0);
+      } else {
+        const finalW = 1080;
+        const finalH = aspect === '1:1' ? 1080 : 1920;
+
+        elements.canvas.width = finalW;
+        elements.canvas.height = finalH;
+
+        // Dark background card
+        ctx.fillStyle = '#121212';
+        ctx.fillRect(0, 0, finalW, finalH);
+
+        // Responsive Scaling to fit receipt inside social card frame
+        const maxDisplayW = finalW * 0.82;
+        const maxDisplayH = finalH * 0.88;
+        const fitScale = Math.min(maxDisplayW / printWidth, maxDisplayH / paperHeight, 2.0);
+
+        const dispW = Math.round(printWidth * fitScale);
+        const dispH = Math.round(paperHeight * fitScale);
+        const destX = Math.round((finalW - dispW) / 2);
+        const destY = Math.round((finalH - dispH) / 2);
+
+        // Keep dithered dots crisp on scaled preview
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(ditherCanvas, destX, destY, dispW, dispH);
+      }
+
       elements.downloadBtn.disabled = false;
-      elements.clearBtn.disabled = false;
+      elements.clearBtn.disabled = !loadedImage;
     }
 
-    // Reset All Control Sliders & Inputs to Defaults
+    // Event Listeners
     elements.resetBtn.addEventListener('click', () => {
       elements.widthInput.value = DEFAULTS.width;
       elements.contrastInput.value = DEFAULTS.contrast;
@@ -267,24 +410,15 @@
       elements.transparencyInput.value = DEFAULTS.transparency;
       elements.dropoutsInput.value = DEFAULTS.dropouts;
       elements.tearInput.checked = DEFAULTS.tear;
+      elements.aspectInput.value = DEFAULTS.aspect;
 
-      updateLabels();
-      if (loadedImage) render();
+      render();
     });
 
-    // Clear Uploaded File and Reset Previews
     elements.clearBtn.addEventListener('click', () => {
       elements.imageInput.value = '';
-      elements.inputPreview.src = '';
-      elements.inputPreview.style.display = 'none';
       loadedImage = null;
-
-      ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
-      elements.canvas.width = 0;
-      elements.canvas.height = 0;
-
-      elements.downloadBtn.disabled = true;
-      elements.clearBtn.disabled = true;
+      render();
     });
 
     elements.imageInput.addEventListener('change', (e) => {
@@ -293,9 +427,6 @@
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        elements.inputPreview.src = event.target.result;
-        elements.inputPreview.style.display = 'block';
-
         const img = new Image();
         img.onload = () => {
           loadedImage = img;
@@ -307,24 +438,23 @@
     });
 
     [
-      elements.widthInput,
-      elements.contrastInput,
-      elements.brightnessInput,
-      elements.ditherInput,
-      elements.paletteInput,
-      elements.transparencyInput,
-      elements.dropoutsInput,
-      elements.tearInput
+      elements.widthInput, elements.contrastInput, elements.brightnessInput,
+      elements.ditherInput, elements.paletteInput, elements.transparencyInput,
+      elements.dropoutsInput, elements.tearInput, elements.aspectInput,
+      elements.headerTitle, elements.headerSub, ...elements.trackInputs
     ].forEach(input => {
       input.addEventListener('input', render);
     });
 
     elements.downloadBtn.addEventListener('click', () => {
       const link = document.createElement('a');
-      link.download = 'thermal-receipt.png';
+      link.download = `strukfoto-receipt-${elements.aspectInput.value}.png`;
       link.href = elements.canvas.toDataURL('image/png');
       link.click();
     });
+
+    // Initial Render
+    render();
   </script>
 </body>
 </html>
