@@ -2,111 +2,623 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>strukfoto — thermal receipt filter</title>
-</head>
-<body>
-    <h1>strukfoto // album receipt generator</h1>
-      <h3><a href="https://saweria.co/rayyanekaputra" target="_blank">https://saweria.co/rayyanekaputra</a></h3>
+  <title>strukfoto.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Manrope', sans-serif;
+        font-weight: 500 !important;
+        color: #1A1A1A;
+        -webkit-font-smoothing: antialiased;
+      }
 
-      <div>
-        <label>photo upload: <input type="file" id="imageInput" accept="image/*"></label>
-        <button id="clearBtn" disabled>clear image</button>
-      </div>
-      <br>
+      body {
+        background-color: #F2EFE9;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px 16px;
+      }
 
-      <!-- Export & Canvas Aspect Ratio Controls -->
-      <fieldset>
-        <legend><strong>share & export aspect ratio</strong></legend>
-        <div>
-          <label>aspect ratio:
+      .app-container {
+        width: 100%;
+        max-width: 440px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Header Section */
+      .brand-header {
+        container-type: inline-size;
+        margin-bottom: 4px;
+        width: 100%;
+      }
+
+      .brand-title {
+        font-size: 24.2cqi;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        line-height: 0.88;
+        margin-bottom: 8px;
+        white-space: nowrap;
+        display: block;
+        width: 100%;
+      }
+
+      .brand-subtitle {
+        font-size: 0.85rem;
+        font-weight: 500;
+        opacity: 0.8;
+        letter-spacing: -0.01em;
+      }
+
+      /* Grid Layout System */
+      .control-grid {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .grid-row {
+        display: flex;
+        border: 1px solid #1A1A1A;
+        margin-top: -1px;
+        background-color: #F2EFE9;
+        position: relative;
+      }
+
+      .grid-row:first-child {
+        margin-top: 0;
+      }
+
+      .grid-col {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 14px;
+        background: transparent;
+        border: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .grid-col + .grid-col {
+        border-left: 1px solid #1A1A1A;
+      }
+
+      /* File Input Override */
+      input[type="file"] {
+        display: none;
+      }
+
+      .btn-label {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .btn-label svg, .grid-col svg {
+        width: 16px;
+        height: 16px;
+        stroke: #1A1A1A;
+        fill: none;
+        stroke-width: 2;
+      }
+
+      /* Dropdown Selects */
+      .select-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      select {
+        width: 100%;
+        padding: 12px 36px 12px 14px;
+        background-color: #F2EFE9;
+        color: #1A1A1A;
+        border: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        text-align: center;
+        text-align-last: center;
+      }
+
+      select:focus {
+        outline: none;
+      }
+
+      /* Recolor native popover options */
+      select option {
+        background-color: #F2EFE9;
+        color: #1A1A1A;
+        padding: 8px;
+      }
+
+      select option:checked,
+      select option:hover {
+        background-color: #1A1A1A;
+        color: #F2EFE9;
+      }
+
+      .select-chevron {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+      /* Checkbox Rows */
+      .checkbox-row {
+        justify-content: center;
+        gap: 10px;
+        user-select: none;
+        cursor: pointer;
+      }
+
+      input[type="checkbox"] {
+        display: none;
+      }
+
+      .custom-checkbox {
+        width: 16px;
+        height: 16px;
+        border: 1px solid #1A1A1A;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+      }
+
+      input[type="checkbox"]:checked + .custom-checkbox svg {
+        display: block;
+      }
+
+      .custom-checkbox svg {
+        display: none;
+        width: 12px;
+        height: 12px;
+        stroke: #1A1A1A;
+        stroke-width: 3;
+      }
+
+      /* Text Inputs Block */
+      .text-inputs-block {
+        flex-direction: column;
+        padding: 14px;
+        gap: 8px;
+        align-items: stretch;
+      }
+
+      .text-input-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .text-input-field label {
+        white-space: nowrap;
+      }
+
+      .text-input-field input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #75736F;
+        font-family: 'Manrope', sans-serif;
+      }
+
+      .text-input-field input:focus {
+        outline: none;
+        color: #1A1A1A;
+      }
+
+      /* Sliders Block */
+      .sliders-block {
+        flex-direction: column;
+        padding: 12px 14px;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .slider-field {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .slider-field label {
+        width: 110px;
+        flex-shrink: 0;
+      }
+
+      .slider-val {
+        width: 36px;
+        text-align: right;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      /* Custom Range Slider Styling */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      input[type="range"]:focus {
+        outline: none;
+      }
+
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 8px;
+        border: 1px solid #1A1A1A;
+        background: #F2EFE9;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 18px;
+        width: 12px;
+        background: #1A1A1A;
+        margin-top: -6px;
+        border-radius: 0;
+      }
+
+      input[type="range"]::-moz-range-track {
+        width: 100%;
+        height: 8px;
+        border: 1px solid #1A1A1A;
+        background: #F2EFE9;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        height: 18px;
+        width: 12px;
+        background: #1A1A1A;
+        border: none;
+        border-radius: 0;
+      }
+
+      /* Receipt Preview Container Card */
+      .preview-card {
+        border: 1px solid #1A1A1A;
+        background-color: #121212;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .btn-save {
+        background-color: #DB7E14;
+        color: #1A1A1A;
+        border: none;
+        border-bottom: 1px solid #1A1A1A;
+        padding: 14px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: center;
+        width: 100%;
+        transition: opacity 0.15s ease;
+      }
+
+      .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .canvas-viewport {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 24px 16px;
+        min-height: 380px;
+        background-image: linear-gradient(45deg, #1d1d1d 25%, transparent 25%), linear-gradient(-45deg, #1d1d1d 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1d1d1d 75%), linear-gradient(-45deg, transparent 75%, #1d1d1d 75%);
+        background-size: 16px 16px;
+        background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      }
+
+      #receiptCanvas {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .card-footer-buttons {
+        display: flex;
+        border-top: 1px solid #1A1A1A;
+      }
+
+      .btn-saweria {
+        flex: 1.4;
+        background-color: #1A1A1A;
+        color: #F2EFE9;
+        text-decoration: none;
+        padding: 12px 10px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-right: 1px solid #1A1A1A;
+      }
+
+      .btn-saweria span {
+        color: #F2EFE9;
+      }
+
+      .btn-reset {
+        flex: 1;
+        background-color: #F2EFE9;
+        color: #1A1A1A;
+        border: none;
+        padding: 12px 10px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+      }
+
+      /* Website Footer */
+      .site-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .social-links {
+        display: flex;
+        gap: 12px;
+      }
+
+      .social-links a {
+        display: flex;
+        align-items: center;
+      }
+
+      .social-links svg {
+        width: 18px;
+        height: 18px;
+        fill: #1A1A1A;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="app-container">
+
+      <!-- Branding Header -->
+      <header class="brand-header">
+        <h1 class="brand-title">strukfoto.</h1>
+        <p class="brand-subtitle">client-sided, cuman di browser kamu. no server.</p>
+      </header>
+
+      <!-- Controls Form Grid -->
+      <main class="control-grid">
+
+        <!-- Upload / Clear Buttons -->
+        <div class="grid-row">
+          <div class="grid-col">
+            <label for="imageInput" class="btn-label">
+              <span>upload fotomu</span>
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </label>
+            <input type="file" id="imageInput" accept="image/*">
+          </div>
+          <button id="clearBtn" class="grid-col" disabled>
+            <span>hapus foto</span>
+            <svg viewBox="0 0 24 24" style="width:14px; height:14px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <!-- Aspect Ratio Dropdown -->
+        <div class="grid-row">
+          <div class="select-wrapper">
             <select id="aspectInput">
-              <option value="1:1">1:1 square (instagram post / 1080x1080)</option>
-              <option value="9:16">9:16 story (ig / tiktok / 1080x1920)</option>
-              <option value="native">native (fit receipt paper + transparent canvas)</option>
+              <option value="1:1">ukuran: 1:1 square (1080x1080)</option>
+              <option value="9:16">ukuran: 9:16 story (1080x1920)</option>
+              <option value="native">ukuran: native paper</option>
             </select>
+            <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+
+        <!-- Card Background Transparency Checkbox -->
+        <div class="grid-row">
+          <label for="transparentBgInput" class="grid-col checkbox-row">
+            <span>latar transparan?</span>
+            <input type="checkbox" id="transparentBgInput">
+            <div class="custom-checkbox">
+              <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
           </label>
         </div>
-        <div>
-          <label><input type="checkbox" id="transparentBgInput"> transparent card background (1:1 / 9:16)</label>
-        </div>
-      </fieldset>
-      <br>
 
-      <!-- Receipt Content & Layout Controls -->
-      <fieldset>
-        <legend><strong>album receipt content & layout</strong></legend>
-        <div>
-          <label>photo position:
+        <!-- Photo Position Dropdown -->
+        <div class="grid-row">
+          <div class="select-wrapper">
             <select id="imagePosInput">
-              <option value="top">top (classic receipt / under header)</option>
-              <option value="middle">middle (between items & summary)</option>
-              <option value="bottom">bottom (above barcode / event ticket style)</option>
-              <option value="background">background watermark (behind text)</option>
+              <option value="top">layout struk: top (classic)</option>
+              <option value="middle">layout struk: middle</option>
+              <option value="bottom">layout struk: bottom</option>
+              <option value="background">layout struk: background watermark</option>
             </select>
-          </label>
+            <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
         </div>
-        <br>
-        <div><label>header title: <input type="text" id="headerTitle" value="STRUKFOTO"></label></div>
-        <div><label>subtitle: <input type="text" id="headerSub" value="THE ALBUM RECEIPT"></label></div>
-        <br>
-        <div><label>track 1: <input type="text" class="track-input" value="01. STARGAZING - TRAVIS SCOTT"></label></div>
-        <div><label>track 2: <input type="text" class="track-input" value="02. BLINDING LIGHTS - THE WEEKND"></label></div>
-        <div><label>track 3: <input type="text" class="track-input" value="03. REDRUM - 21 SAVAGE"></label></div>
-        <div><label>track 4: <input type="text" class="track-input" value="04. MIDNIGHT CITY - M83"></label></div>
-        <div><label>track 5: <input type="text" class="track-input" value="05. FE!N - TRAVIS SCOTT"></label></div>
-      </fieldset>
-      <br>
 
-      <!-- Thermal Controls -->
-      <fieldset>
-        <legend><strong>thermal filter controls</strong></legend>
-        <div><label>print width (px): <input type="range" id="widthInput" min="280" max="650" value="450"> <span id="widthVal">450</span></label></div>
-        <div><label>contrast: <input type="range" id="contrastInput" min="0.5" max="3.5" step="0.1" value="1.8"> <span id="contrastVal">1.8</span></label></div>
-        <div><label>brightness: <input type="range" id="brightnessInput" min="0.5" max="2.0" step="0.1" value="1.0"> <span id="brightVal">1.0</span></label></div>
-        <div>
-          <label>dither mode:
+        <!-- Text Inputs Block -->
+        <div class="grid-row text-inputs-block">
+          <div class="text-input-field">
+            <label>judul struk:</label>
+            <input type="text" id="headerTitle" value="STRUKFOTO">
+          </div>
+          <div class="text-input-field">
+            <label>subjudul struk:</label>
+            <input type="text" id="headerSub" value="THE ALBUM RECEIPT">
+          </div>
+          <div class="text-input-field">
+            <label>track 1:</label>
+            <input type="text" class="track-input" value="01. STARGAZING - TRAVIS SCOTT">
+          </div>
+          <div class="text-input-field">
+            <label>track 2:</label>
+            <input type="text" class="track-input" value="02. BLINDING LIGHTS - THE WEEKND">
+          </div>
+          <div class="text-input-field">
+            <label>track 3:</label>
+            <input type="text" class="track-input" value="03. REDRUM - 21 SAVAGE">
+          </div>
+          <div class="text-input-field">
+            <label>track 4:</label>
+            <input type="text" class="track-input" value="04. MIDNIGHT CITY - M83">
+          </div>
+          <div class="text-input-field">
+            <label>track 5:</label>
+            <input type="text" class="track-input" value="05. FE!N - TRAVIS SCOTT">
+          </div>
+        </div>
+
+        <!-- Sliders Block -->
+        <div class="grid-row sliders-block">
+          <div class="slider-field">
+            <label>resolusi (px):</label>
+            <input type="range" id="widthInput" min="280" max="650" value="450">
+            <span class="slider-val" id="widthVal">450</span>
+          </div>
+          <div class="slider-field">
+            <label>kontras:</label>
+            <input type="range" id="contrastInput" min="0.5" max="3.5" step="0.1" value="1.8">
+            <span class="slider-val" id="contrastVal">1.8</span>
+          </div>
+          <div class="slider-field">
+            <label>terang:</label>
+            <input type="range" id="brightnessInput" min="0.5" max="2.0" step="0.1" value="1.0">
+            <span class="slider-val" id="brightVal">1</span>
+          </div>
+        </div>
+
+        <!-- Dither Mode Dropdown -->
+        <div class="grid-row">
+          <div class="select-wrapper">
             <select id="ditherInput">
-              <option value="bayer8">bayer 8x8</option>
-              <option value="bayer4">bayer 4x4</option>
-              <option value="threshold">simple threshold</option>
+              <option value="bayer8">mode dither: bayer 8x8</option>
+              <option value="bayer4">mode dither: bayer 4x4</option>
+              <option value="threshold">mode dither: simple threshold</option>
             </select>
-          </label>
+            <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
         </div>
-        <div>
-          <label>color palette:
+
+        <!-- Color Palette Dropdown -->
+        <div class="grid-row">
+          <div class="select-wrapper">
             <select id="paletteInput">
-              <option value="cream">classic cream</option>
-              <option value="aged">aged yellow</option>
-              <option value="blue">blue thermal</option>
-              <option value="bw">stark b&w</option>
+              <option value="cream">tema warna struk: classic cream</option>
+              <option value="aged">tema warna struk: aged yellow</option>
+              <option value="blue">tema warna struk: blue thermal</option>
+              <option value="bw">tema warna struk: stark b&w</option>
             </select>
-          </label>
+            <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
         </div>
-        <div>
-          <label>receipt element transparency:
+
+        <!-- Receipt Element Transparency Dropdown -->
+        <div class="grid-row">
+          <div class="select-wrapper">
             <select id="transparencyInput">
-              <option value="none">solid (paper + ink)</option>
-              <option value="paper">transparent paper (ink only)</option>
-              <option value="ink">transparent ink (paper only)</option>
+              <option value="none">mode transparan si struk: solid (paper + ink)</option>
+              <option value="paper">mode transparan si struk: transparent paper</option>
+              <option value="ink">mode transparan si struk: transparent ink</option>
             </select>
+            <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+
+        <!-- Glitches Slider -->
+        <div class="grid-row sliders-block">
+          <div class="slider-field">
+            <label>glitches:</label>
+            <input type="range" id="dropoutsInput" min="0" max="0.05" step="0.002" value="0.012">
+            <span class="slider-val" id="dropoutsVal">0.012</span>
+          </div>
+        </div>
+
+        <!-- Tear Edge Checkbox -->
+        <div class="grid-row">
+          <label for="tearInput" class="grid-col checkbox-row">
+            <span>pinggir kertas bergerigi?</span>
+            <input type="checkbox" id="tearInput" checked>
+            <div class="custom-checkbox">
+              <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
           </label>
         </div>
-        <div><label>dead pin glitches: <input type="range" id="dropoutsInput" min="0" max="0.05" step="0.002" value="0.012"> <span id="dropoutsVal">0.012</span></label></div>
-        <div><label><input type="checkbox" id="tearInput" checked> serrated paper tear edge</label></div>
-      </fieldset>
-      <br>
 
-      <div>
-        <button id="resetBtn">reset controls</button>
-        <button id="downloadBtn" disabled>download png</button>
-      </div>
-      <br>
+      </main>
 
-      <!-- Canvas Render Target -->
-      <div>
-        <h3>shareable preview</h3>
-        <canvas id="receiptCanvas" style="max-width: 100%; height: auto; border: 1px solid #444; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px;"></canvas>
+      <!-- Preview Container Card -->
+      <div class="preview-card">
+        <button id="downloadBtn" class="btn-save" disabled>simpan struk</button>
+
+        <div class="canvas-viewport">
+          <canvas id="receiptCanvas"></canvas>
+        </div>
+
+        <div class="card-footer-buttons">
+          <a href="https://saweria.co/rayyanekaputra" target="_blank" class="btn-saweria">
+            <span>support rayyan dengan kopi? cek saweria</span>
+          </a>
+          <button id="resetBtn" class="btn-reset">reset filter</button>
+        </div>
       </div>
+
+      <!-- Site Footer -->
+      <footer class="site-footer">
+        <span>proudly developed by rayyanekaputra.</span>
+        <div class="social-links">
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          </a>
+          <a href="#" aria-label="Twitter">
+            <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+        </div>
+      </footer>
+
+    </div>
 <script src="./core_logic.js"></script>
 </body>
 </html>
