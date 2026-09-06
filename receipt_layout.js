@@ -1,3 +1,13 @@
+// Helper for dynamic edge-to-edge space-between formatting
+function row(left, right, maxChars, fillChar = ' ') {
+  const l = String(left || '').toUpperCase();
+  const r = String(right || '').toUpperCase();
+  const maxL = Math.max(1, maxChars - r.length - 1);
+  const truncL = l.length > maxL ? l.substring(0, maxL) : l;
+  const fillLen = Math.max(1, maxChars - truncL.length - r.length);
+  return truncL + fillChar.repeat(fillLen) + r;
+}
+
 export const RECEIPT_LAYOUTS = {
   album: {
     name: 'album receipt',
@@ -19,17 +29,14 @@ export const RECEIPT_LAYOUTS = {
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText('ITEM / TRACK DESCRIPTION        QTY', margin, y);
+      pCtx.fillText(row('ITEM / TRACK DESCRIPTION', 'QTY', maxChars), margin, y);
       y += lineHeight;
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
 
       items.forEach((text) => {
         if (!text) return;
-        let line = text.toUpperCase();
-        if (line.length > maxChars - 4) line = line.substring(0, maxChars - 4);
-        const dots = '.'.repeat(Math.max(1, maxChars - line.length - 2));
-        pCtx.fillText(`${line} ${dots} 1`, margin, y);
+        pCtx.fillText(row(text, '1', maxChars, '.'), margin, y);
         y += lineHeight;
       });
 
@@ -37,9 +44,9 @@ export const RECEIPT_LAYOUTS = {
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText(`TOTAL TRACKS:                      ${items.filter(Boolean).length}`, margin, y);
+      pCtx.fillText(row('TOTAL TRACKS:', items.filter(Boolean).length, maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`AUTH CODE:                   #SF2026`, margin, y);
+      pCtx.fillText(row('AUTH CODE:', '#SF2026', maxChars), margin, y);
       y += Math.round(22 * scale);
 
       if (imagePos === 'bottom') y = renderPhoto(y);
@@ -67,7 +74,7 @@ export const RECEIPT_LAYOUTS = {
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText('ITEM DESCRIPTION               PRICE', margin, y);
+      pCtx.fillText(row('ITEM DESCRIPTION', 'PRICE', maxChars), margin, y);
       y += lineHeight;
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
@@ -75,11 +82,8 @@ export const RECEIPT_LAYOUTS = {
       const mockPrices = ['$4.50 T', '$5.75 T', '$0.00 T', '$8.00 T', '$9.99 T'];
       items.forEach((text, i) => {
         if (!text) return;
-        let line = text.toUpperCase();
         const price = mockPrices[i % mockPrices.length];
-        if (line.length > maxChars - price.length - 1) line = line.substring(0, maxChars - price.length - 1);
-        const spaces = ' '.repeat(Math.max(1, maxChars - line.length - price.length));
-        pCtx.fillText(`${line}${spaces}${price}`, margin, y);
+        pCtx.fillText(row(text, price, maxChars), margin, y);
         y += lineHeight;
       });
 
@@ -87,15 +91,15 @@ export const RECEIPT_LAYOUTS = {
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText(`SUBTOTAL                       $28.24`, margin, y);
+      pCtx.fillText(row('SUBTOTAL', '$28.24', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`TAX (10%)                       $2.82`, margin, y);
+      pCtx.fillText(row('TAX (10%)', '$2.82', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`TOTAL                          $31.06`, margin, y);
+      pCtx.fillText(row('TOTAL', '$31.06', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`CASH TENDERED                  $40.00`, margin, y);
+      pCtx.fillText(row('CASH TENDERED', '$40.00', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`CHANGE DUE                      $8.94`, margin, y);
+      pCtx.fillText(row('CHANGE DUE', '$8.94', maxChars), margin, y);
       y += Math.round(22 * scale);
 
       if (imagePos === 'bottom') y = renderPhoto(y);
@@ -117,22 +121,22 @@ export const RECEIPT_LAYOUTS = {
       const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
       return Math.round(headerH + photoH + bodyH + footerH);
     },
-    drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
+    drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
 
-      pCtx.fillText(`PASSENGER: ${items[0] || 'RAYYAN/EKA'}`, margin, y);
+      pCtx.fillText(row('PASSENGER:', items[0] || 'RAYYAN/EKA', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`FLIGHT: SF-2026     GATE: B12`, margin, y);
+      pCtx.fillText(row('FLIGHT: SF-2026', 'GATE: B12', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`CLASS: FIRST       SEAT: 02A`, margin, y);
+      pCtx.fillText(row('CLASS: FIRST', 'SEAT: 02A', maxChars), margin, y);
       y += lineHeight;
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText('[CGK] --------------> [DPS]', margin, y);
+      pCtx.fillText(row('[CGK]', '---------> [DPS]', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText('JAKARTA               BALI', margin, y);
+      pCtx.fillText(row('JAKARTA', 'BALI', maxChars), margin, y);
       y += lineHeight;
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
@@ -141,9 +145,9 @@ export const RECEIPT_LAYOUTS = {
 
       pCtx.fillText('- - - - TEAR OFF STUB - - - -', margin, y);
       y += lineHeight;
-      pCtx.fillText(`PASS: ${items[0] || 'RAYYAN/EKA'}`, margin, y);
+      pCtx.fillText(row('PASS:', items[0] || 'RAYYAN/EKA', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`FLIGHT: SF-2026   SEAT: 02A   ZONE: 1`, margin, y);
+      pCtx.fillText(row('FLIGHT: SF-2026', 'SEAT: 02A ZONE:1', maxChars), margin, y);
       y += Math.round(22 * scale);
 
       if (imagePos === 'bottom') y = renderPhoto(y);
@@ -165,17 +169,17 @@ export const RECEIPT_LAYOUTS = {
       const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
       return Math.round(headerH + photoH + bodyH + footerH);
     },
-    drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
+    drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
 
-      pCtx.fillText(`PLATE #: ${items[0] || 'B 1234 XYZ'}`, margin, y);
+      pCtx.fillText(row('PLATE #:', items[0] || 'B 1234 XYZ', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`ENTRY TIME:                  18:02:14`, margin, y);
+      pCtx.fillText(row('ENTRY TIME:', '18:02:14', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`EXIT TIME:                   23:10:05`, margin, y);
+      pCtx.fillText(row('EXIT TIME:', '23:10:05', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`DURATION:                    05H 07M`, margin, y);
+      pCtx.fillText(row('DURATION:', '05H 07M', maxChars), margin, y);
       y += lineHeight;
 
       pCtx.fillText(subDividerLine, margin, y);
@@ -183,13 +187,13 @@ export const RECEIPT_LAYOUTS = {
 
       if (imagePos === 'middle') y = renderPhoto(y);
 
-      pCtx.fillText(`RATE TIER (FIRST 2H)          $5.00`, margin, y);
+      pCtx.fillText(row('RATE TIER (1ST 2H)', '$5.00', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`ADDITIONAL (3H)               $6.00`, margin, y);
+      pCtx.fillText(row('ADDITIONAL (3H)', '$6.00', maxChars), margin, y);
       y += lineHeight;
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText(`TOTAL DUE                    $11.00`, margin, y);
+      pCtx.fillText(row('TOTAL DUE', '$11.00', maxChars), margin, y);
       y += Math.round(22 * scale);
 
       if (imagePos === 'bottom') y = renderPhoto(y);
@@ -211,27 +215,27 @@ export const RECEIPT_LAYOUTS = {
       const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
       return Math.round(headerH + photoH + bodyH + footerH);
     },
-    drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
+    drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
 
-      pCtx.fillText(`VENUE: THE GRAND ARENA`, margin, y);
+      pCtx.fillText(row('VENUE:', 'THE GRAND ARENA', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`DOORS OPEN: 20:00 | RATING: ALL AGES`, margin, y);
+      pCtx.fillText(row('DOORS: 20:00', 'RATING: ALL AGES', maxChars), margin, y);
       y += lineHeight;
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText(`SEC: A1   | ROW: 04   | SEAT: 18`, margin, y);
+      pCtx.fillText(row('SEC: A1', 'ROW: 04 | SEAT: 18', maxChars), margin, y);
       y += lineHeight;
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
 
       if (imagePos === 'middle') y = renderPhoto(y);
 
-      pCtx.fillText(`HOLDER: ${items[0] || 'VIP GUEST'}`, margin, y);
+      pCtx.fillText(row('HOLDER:', items[0] || 'VIP GUEST', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`ADMIT: 01 PERSON`, margin, y);
+      pCtx.fillText(row('ADMIT:', '01 PERSON', maxChars), margin, y);
       y += Math.round(22 * scale);
 
       if (imagePos === 'bottom') y = renderPhoto(y);
@@ -253,31 +257,31 @@ export const RECEIPT_LAYOUTS = {
       const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
       return Math.round(headerH + photoH + bodyH + footerH);
     },
-    drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
+    drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
 
-      pCtx.fillText(`CARD: ************8821`, margin, y);
+      pCtx.fillText(row('CARD:', '************8821', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`TRANSACTION #: 009412`, margin, y);
+      pCtx.fillText(row('TRANSACTION #:', '009412', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`TYPE: WITHDRAWAL`, margin, y);
+      pCtx.fillText(row('TYPE:', 'WITHDRAWAL', maxChars), margin, y);
       y += lineHeight;
 
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
-      pCtx.fillText(`AMOUNT:                     $200.00`, margin, y);
+      pCtx.fillText(row('AMOUNT:', '$200.00', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`FEE:                          $0.00`, margin, y);
+      pCtx.fillText(row('FEE:', '$0.00', maxChars), margin, y);
       y += lineHeight;
       pCtx.fillText(subDividerLine, margin, y);
       y += lineHeight;
 
       if (imagePos === 'middle') y = renderPhoto(y);
 
-      pCtx.fillText(`ACCOUNT BALANCE:          $1,240.00`, margin, y);
+      pCtx.fillText(row('ACCOUNT BAL:', '$1,240.00', maxChars), margin, y);
       y += lineHeight;
-      pCtx.fillText(`AVAILABLE:                $1,240.00`, margin, y);
+      pCtx.fillText(row('AVAILABLE:', '$1,240.00', maxChars), margin, y);
       y += Math.round(22 * scale);
 
       if (imagePos === 'bottom') y = renderPhoto(y);
