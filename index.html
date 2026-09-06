@@ -467,7 +467,20 @@
             </div>
           </label>
         </div>
-
+        <!-- Receipt Template Preset Select -->
+        <div class="grid-row">
+          <div class="select-wrapper">
+            <select id="layoutSelect">
+              <option value="album">tipe struk: album / tracklist</option>
+              <option value="grocery">tipe struk: supermarket / grocery</option>
+              <option value="airline">tipe struk: airline boarding pass</option>
+              <option value="parking">tipe struk: parking ticket</option>
+              <option value="concert">tipe struk: concert / event stub</option>
+              <option value="atm">tipe struk: atm / bank slip</option>
+            </select>
+            <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
         <!-- Photo Position Dropdown -->
         <div class="grid-row">
           <div class="select-wrapper">
@@ -624,6 +637,6 @@
       </footer>
 
     </div>
-<script src="./core_logic.js"></script>
+<script type="module" src="./core_logic.js"></script>
 </body>
 </html>

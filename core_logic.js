@@ -1,7 +1,9 @@
+import { RECEIPT_LAYOUTS } from './receipt_layout.js';
+
 const DEFAULTS = {
   width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
   palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true,
-  aspect: '1:1', transparentBg: false, imagePos: 'top'
+  aspect: '1:1', transparentBg: false, imagePos: 'top', layout: 'album'
 };
 
 const PALETTES = {
@@ -29,6 +31,7 @@ const elements = {
   aspectInput: document.getElementById('aspectInput'),
   transparentBgInput: document.getElementById('transparentBgInput'),
   imagePosInput: document.getElementById('imagePosInput'),
+  layoutSelect: document.getElementById('layoutSelect'),
   headerTitle: document.getElementById('headerTitle'),
   headerSub: document.getElementById('headerSub'),
   trackInputs: document.querySelectorAll('.track-input'),
@@ -55,13 +58,12 @@ let cachedDeadRows = [];
 let lastHeight = 0;
 
 function updateLabels() {
-  elements.widthVal.textContent = elements.widthInput.value;
-  elements.contrastVal.textContent = elements.contrastInput.value;
-  elements.brightVal.textContent = elements.brightnessInput.value;
-  elements.dropoutsVal.textContent = elements.dropoutsInput.value;
+  if (elements.widthVal) elements.widthVal.textContent = elements.widthInput.value;
+  if (elements.contrastVal) elements.contrastVal.textContent = elements.contrastInput.value;
+  if (elements.brightVal) elements.brightVal.textContent = elements.brightnessInput.value;
+  if (elements.dropoutsVal) elements.dropoutsVal.textContent = elements.dropoutsInput.value;
 }
 
-// Selective Dithering: Processes ONLY the uploaded photo canvas
 function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette) {
   const pCanvas = document.createElement('canvas');
   pCanvas.width = targetWidth;
@@ -135,7 +137,6 @@ function render() {
   const transparentCardBg = elements.transparentBgInput.checked;
   const imagePos = elements.imagePosInput.value;
 
-  // Layout Constants
   const scale = printWidth / 450.0;
   const margin = Math.round(20 * scale);
   const fontSizeTitle = Math.max(12, Math.round(20 * scale));
@@ -151,8 +152,8 @@ function render() {
 
   const usablePhotoWidth = printWidth - margin * 2;
   const photoHeight = loadedImage ? Math.round((loadedImage.height / loadedImage.width) * usablePhotoWidth) : 0;
-
   const isWatermark = imagePos === 'background';
+
   const paperHeight = Math.round(
     (lineHeight * 6) +
     (loadedImage && !isWatermark ? photoHeight + Math.round(15 * scale) : 0) +
@@ -160,42 +161,22 @@ function render() {
     barcodeHeight + Math.round(30 * scale)
   );
 
-  // Setup Paper Canvas
   const paperCanvas = document.createElement('canvas');
   paperCanvas.width = printWidth;
   paperCanvas.height = paperHeight;
   const pCtx = paperCanvas.getContext('2d');
 
-  // Fill Paper Background
   if (transparencyMode !== 'paper') {
     pCtx.fillStyle = palette.paperHex;
     pCtx.fillRect(0, 0, printWidth, paperHeight);
   }
 
-  // Generate Dithered Photo
   let ditheredPhotoCanvas = null;
   if (loadedImage) {
     ditheredPhotoCanvas = processDitheredPhoto(loadedImage, usablePhotoWidth, photoHeight, brightness, contrast, ditherMode, palette);
   }
 
   let curY = Math.round(25 * scale);
-
-  function renderPhoto() {
-    if (ditheredPhotoCanvas && !isWatermark) {
-      pCtx.drawImage(ditheredPhotoCanvas, margin, curY);
-      curY += photoHeight + Math.round(15 * scale);
-    }
-  }
-
-  // Draw Background Watermark
-  if (ditheredPhotoCanvas && isWatermark) {
-    pCtx.save();
-    pCtx.globalAlpha = 0.35;
-    pCtx.drawImage(ditheredPhotoCanvas, margin, Math.round(60 * scale));
-    pCtx.restore();
-  }
-
-  // Crisp Vector Ink Setup
   const inkColor = transparencyMode === 'ink' ? '#00000000' : palette.inkHex;
   pCtx.fillStyle = inkColor;
   pCtx.textAlign = 'center';
@@ -214,48 +195,41 @@ function render() {
   curY += lineHeight;
 
   pCtx.textAlign = 'left';
-  pCtx.fillText(`DATE: 2026-09-02      REC #: ${Math.floor(1000 + Math.random() * 9000)}`, margin, curY);
+  pCtx.fillText(`DATE: 2026-09-06      REC #: ${Math.floor(1000 + Math.random() * 9000)}`, margin, curY);
   curY += lineHeight;
 
-  if (imagePos === 'top') renderPhoto();
+  // Layout Delegation
+  const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
+  const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
+  const itemStrings = Array.from(elements.trackInputs).map(input => input.value.trim());
 
-  // Tracklist Section
-  pCtx.fillText(subDividerLine, margin, curY);
-  curY += lineHeight;
-  pCtx.fillText('ITEM / TRACK DESCRIPTION        QTY', margin, curY);
-  curY += lineHeight;
-  pCtx.fillText(subDividerLine, margin, curY);
-  curY += lineHeight;
-
-  elements.trackInputs.forEach((input) => {
-    if (input.value.trim() !== '') {
-      let text = input.value.toUpperCase();
-      if (text.length > maxChars - 4) text = text.substring(0, maxChars - 4);
-      const dots = '.'.repeat(Math.max(1, maxChars - text.length - 2));
-      pCtx.fillText(`${text} ${dots} 1`, margin, curY);
-      curY += lineHeight;
-    }
+  curY = layoutModule.drawContent(pCtx, {
+    printWidth,
+    margin,
+    curY,
+    lineHeight,
+    scale,
+    maxChars,
+    subDividerLine,
+    items: itemStrings,
+    renderPhoto: (atY) => {
+      if (ditheredPhotoCanvas && !isWatermark) {
+        pCtx.drawImage(ditheredPhotoCanvas, margin, atY);
+        return atY + photoHeight + Math.round(15 * scale);
+      }
+      return atY;
+    },
+    imagePos
   });
-
-  if (imagePos === 'middle') renderPhoto();
-
-  // Summary Section
-  pCtx.fillText(subDividerLine, margin, curY);
-  curY += lineHeight;
-  pCtx.fillText(`TOTAL TRACKS:                      5`, margin, curY);
-  curY += lineHeight;
-  pCtx.fillText(`AUTH CODE:                   #SF2026`, margin, curY);
-  curY += Math.round(22 * scale);
-
-  if (imagePos === 'bottom') renderPhoto();
 
   // Barcode & Footer
   drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight, inkColor);
   curY += barcodeHeight + Math.round(15 * scale);
   pCtx.textAlign = 'center';
-  pCtx.fillText('THANK YOU FOR LISTENING', printWidth / 2, curY);
+  const footerMsg = layoutModule.fields?.footerMsg || 'THANK YOU FOR LISTENING';
+  pCtx.fillText(footerMsg, printWidth / 2, curY);
 
-  // Apply Razor-Sharp Glitch Lines Over Paper & Text
+  // Glitch Lines Pass
   const numDropouts = Math.floor(paperHeight * dropoutDensity);
   if (lastHeight !== paperHeight || cachedDeadRows.length !== numDropouts) {
     const rows = new Set();
@@ -275,7 +249,7 @@ function render() {
     }
   });
 
-  // Apply Serrated Tear Edges
+  // Serrated Tear Edge Pass
   if (showTear) {
     pCtx.save();
     pCtx.globalCompositeOperation = 'destination-out';
@@ -292,7 +266,7 @@ function render() {
     pCtx.restore();
   }
 
-  // Compositing Output
+  // Compositing Output Canvas
   if (aspect === 'native') {
     elements.canvas.width = printWidth;
     elements.canvas.height = paperHeight;
@@ -329,7 +303,7 @@ function render() {
   elements.clearBtn.disabled = !loadedImage;
 }
 
-// Event Handlers
+// Event Listeners
 elements.resetBtn.addEventListener('click', () => {
   elements.widthInput.value = DEFAULTS.width;
   elements.contrastInput.value = DEFAULTS.contrast;
@@ -342,6 +316,7 @@ elements.resetBtn.addEventListener('click', () => {
   elements.aspectInput.value = DEFAULTS.aspect;
   elements.transparentBgInput.checked = DEFAULTS.transparentBg;
   elements.imagePosInput.value = DEFAULTS.imagePos;
+  if (elements.layoutSelect) elements.layoutSelect.value = DEFAULTS.layout;
 
   render();
 });
@@ -372,10 +347,10 @@ elements.imageInput.addEventListener('change', (e) => {
   elements.widthInput, elements.contrastInput, elements.brightnessInput,
   elements.ditherInput, elements.paletteInput, elements.transparencyInput,
   elements.dropoutsInput, elements.tearInput, elements.aspectInput,
-  elements.transparentBgInput, elements.imagePosInput, elements.headerTitle,
-  elements.headerSub, ...elements.trackInputs
+  elements.transparentBgInput, elements.imagePosInput, elements.layoutSelect,
+  elements.headerTitle, elements.headerSub, ...elements.trackInputs
 ].forEach(input => {
-  input.addEventListener('input', render);
+  if (input) input.addEventListener('input', render);
 });
 
 elements.downloadBtn.addEventListener('click', () => {
