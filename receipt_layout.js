@@ -1,7 +1,18 @@
 export const RECEIPT_LAYOUTS = {
   album: {
     name: 'album receipt',
-    fields: { footerMsg: 'THANK YOU FOR LISTENING' },
+    fields: {
+      footerMsg: 'THANK YOU FOR LISTENING',
+      sectionTitle: 'TRACKLIST ITEMS',
+      placeholders: ['Track 1 Title', 'Track 2 Title', 'Track 3 Title', 'Track 4 Title', 'Track 5 Title']
+    },
+    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, items, barcodeHeight }) => {
+      const headerH = 25 * scale + lineHeight * 4;
+      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
+      const bodyH = lineHeight * (6 + items.filter(Boolean).length) + 22 * scale;
+      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
+      return Math.round(headerH + photoH + bodyH + footerH);
+    },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
@@ -38,7 +49,18 @@ export const RECEIPT_LAYOUTS = {
 
   grocery: {
     name: 'grocery / market',
-    fields: { footerMsg: '*** YOU SAVED $4.20 TODAY! ***' },
+    fields: {
+      footerMsg: '*** YOU SAVED $4.20 TODAY! ***',
+      sectionTitle: 'GROCERY ITEMS',
+      placeholders: ['Item 1 (e.g. Iced Coffee)', 'Item 2 (e.g. Fresh Milk)', 'Item 3 (e.g. Bakery)', 'Item 4', 'Item 5']
+    },
+    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, items, barcodeHeight }) => {
+      const headerH = 25 * scale + lineHeight * 4;
+      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
+      const bodyH = lineHeight * (9 + items.filter(Boolean).length) + 22 * scale;
+      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
+      return Math.round(headerH + photoH + bodyH + footerH);
+    },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
@@ -83,7 +105,18 @@ export const RECEIPT_LAYOUTS = {
 
   airline: {
     name: 'airline boarding pass',
-    fields: { footerMsg: 'HAVE A GOOD FLIGHT' },
+    fields: {
+      footerMsg: 'HAVE A GOOD FLIGHT',
+      sectionTitle: 'PASSENGER & FLIGHT DETAILS',
+      placeholders: ['Passenger Name (e.g. RAYYAN/EKA)', 'Additional Note / Class', 'Special Request', '', '']
+    },
+    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
+      const headerH = 25 * scale + lineHeight * 4;
+      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
+      const bodyH = lineHeight * 10 + 22 * scale;
+      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
+      return Math.round(headerH + photoH + bodyH + footerH);
+    },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
@@ -120,7 +153,18 @@ export const RECEIPT_LAYOUTS = {
 
   parking: {
     name: 'parking ticket',
-    fields: { footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *' },
+    fields: {
+      footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *',
+      sectionTitle: 'VEHICLE & TICKET DETAILS',
+      placeholders: ['Plate Number (e.g. B 1234 XYZ)', 'Parking Slot Code', '', '', '']
+    },
+    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
+      const headerH = 25 * scale + lineHeight * 4;
+      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
+      const bodyH = lineHeight * 9 + 22 * scale;
+      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
+      return Math.round(headerH + photoH + bodyH + footerH);
+    },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
@@ -155,7 +199,18 @@ export const RECEIPT_LAYOUTS = {
 
   concert: {
     name: 'concert stub',
-    fields: { footerMsg: 'VOID IF DETACHED // NO REFUNDS' },
+    fields: {
+      footerMsg: 'VOID IF DETACHED // NO REFUNDS',
+      sectionTitle: 'PASS HOLDER & VENUE INFO',
+      placeholders: ['Ticket Holder (e.g. VIP GUEST)', 'Gate / Entry Note', '', '', '']
+    },
+    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
+      const headerH = 25 * scale + lineHeight * 4;
+      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
+      const bodyH = lineHeight * 7 + 22 * scale;
+      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
+      return Math.round(headerH + photoH + bodyH + footerH);
+    },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
@@ -186,7 +241,18 @@ export const RECEIPT_LAYOUTS = {
 
   atm: {
     name: 'atm slip',
-    fields: { footerMsg: 'RECORD COPY - RETAIN FOR FILES' },
+    fields: {
+      footerMsg: 'RECORD COPY - RETAIN FOR FILES',
+      sectionTitle: 'ACCOUNT & ACCOUNT HOLDER',
+      placeholders: ['Account Holder Name', 'Transaction Note', '', '', '']
+    },
+    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
+      const headerH = 25 * scale + lineHeight * 4;
+      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
+      const bodyH = lineHeight * 9 + 22 * scale;
+      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
+      return Math.round(headerH + photoH + bodyH + footerH);
+    },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);

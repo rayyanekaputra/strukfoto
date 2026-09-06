@@ -64,6 +64,25 @@ function updateLabels() {
   if (elements.dropoutsVal) elements.dropoutsVal.textContent = elements.dropoutsInput.value;
 }
 
+function syncLayoutUI() {
+  const selectedKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
+  const layout = RECEIPT_LAYOUTS[selectedKey] || RECEIPT_LAYOUTS.album;
+  const fields = layout.fields;
+
+  const sectionTitleLabel = document.getElementById('itemSectionTitle');
+  if (sectionTitleLabel && fields.sectionTitle) {
+    sectionTitleLabel.textContent = fields.sectionTitle;
+  }
+
+  if (fields.placeholders && elements.trackInputs) {
+    elements.trackInputs.forEach((input, index) => {
+      const defaultValue = fields.placeholders[index] || '';
+      input.placeholder = defaultValue || `Item ${index + 1}`;
+      input.value = defaultValue;
+    });
+  }
+}
+
 function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette) {
   const pCanvas = document.createElement('canvas');
   pCanvas.width = targetWidth;
@@ -154,12 +173,14 @@ function render() {
   const photoHeight = loadedImage ? Math.round((loadedImage.height / loadedImage.width) * usablePhotoWidth) : 0;
   const isWatermark = imagePos === 'background';
 
-  const paperHeight = Math.round(
-    (lineHeight * 6) +
-    (loadedImage && !isWatermark ? photoHeight + Math.round(15 * scale) : 0) +
-    (lineHeight * (elements.trackInputs.length + 6)) +
-    barcodeHeight + Math.round(30 * scale)
-  );
+  const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
+  const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
+  const itemStrings = Array.from(elements.trackInputs).map(input => input.value.trim());
+
+  // Dynamic paper height calculation
+  const paperHeight = layoutModule.getHeight ? layoutModule.getHeight({
+    lineHeight, scale, photoHeight: loadedImage ? photoHeight : 0, isWatermark, items: itemStrings, barcodeHeight
+  }) : Math.round(lineHeight * 20 + barcodeHeight + (loadedImage ? photoHeight : 0));
 
   const paperCanvas = document.createElement('canvas');
   paperCanvas.width = printWidth;
@@ -176,12 +197,20 @@ function render() {
     ditheredPhotoCanvas = processDitheredPhoto(loadedImage, usablePhotoWidth, photoHeight, brightness, contrast, ditherMode, palette);
   }
 
+  // Render Translucent Background Watermark
+  if (ditheredPhotoCanvas && isWatermark) {
+    pCtx.save();
+    pCtx.globalAlpha = 0.25;
+    const watermarkY = Math.max(margin, Math.round((paperHeight - photoHeight) / 2));
+    pCtx.drawImage(ditheredPhotoCanvas, margin, watermarkY);
+    pCtx.restore();
+  }
+
   let curY = Math.round(25 * scale);
   const inkColor = transparencyMode === 'ink' ? '#00000000' : palette.inkHex;
   pCtx.fillStyle = inkColor;
   pCtx.textAlign = 'center';
 
-  // Header Block
   pCtx.font = `bold ${fontSizeTitle}px "Courier New", monospace`;
   pCtx.fillText(elements.headerTitle.value.toUpperCase(), printWidth / 2, curY);
   curY += lineHeight;
@@ -197,11 +226,6 @@ function render() {
   pCtx.textAlign = 'left';
   pCtx.fillText(`DATE: 2026-09-06      REC #: ${Math.floor(1000 + Math.random() * 9000)}`, margin, curY);
   curY += lineHeight;
-
-  // Layout Delegation
-  const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
-  const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
-  const itemStrings = Array.from(elements.trackInputs).map(input => input.value.trim());
 
   curY = layoutModule.drawContent(pCtx, {
     printWidth,
@@ -222,14 +246,12 @@ function render() {
     imagePos
   });
 
-  // Barcode & Footer
   drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight, inkColor);
   curY += barcodeHeight + Math.round(15 * scale);
   pCtx.textAlign = 'center';
   const footerMsg = layoutModule.fields?.footerMsg || 'THANK YOU FOR LISTENING';
   pCtx.fillText(footerMsg, printWidth / 2, curY);
 
-  // Glitch Lines Pass
   const numDropouts = Math.floor(paperHeight * dropoutDensity);
   if (lastHeight !== paperHeight || cachedDeadRows.length !== numDropouts) {
     const rows = new Set();
@@ -249,7 +271,6 @@ function render() {
     }
   });
 
-  // Serrated Tear Edge Pass
   if (showTear) {
     pCtx.save();
     pCtx.globalCompositeOperation = 'destination-out';
@@ -266,7 +287,6 @@ function render() {
     pCtx.restore();
   }
 
-  // Compositing Output Canvas
   if (aspect === 'native') {
     elements.canvas.width = printWidth;
     elements.canvas.height = paperHeight;
@@ -304,6 +324,13 @@ function render() {
 }
 
 // Event Listeners
+if (elements.layoutSelect) {
+  elements.layoutSelect.addEventListener('change', () => {
+    syncLayoutUI();
+    render();
+  });
+}
+
 elements.resetBtn.addEventListener('click', () => {
   elements.widthInput.value = DEFAULTS.width;
   elements.contrastInput.value = DEFAULTS.contrast;
@@ -318,6 +345,7 @@ elements.resetBtn.addEventListener('click', () => {
   elements.imagePosInput.value = DEFAULTS.imagePos;
   if (elements.layoutSelect) elements.layoutSelect.value = DEFAULTS.layout;
 
+  syncLayoutUI();
   render();
 });
 
@@ -347,8 +375,8 @@ elements.imageInput.addEventListener('change', (e) => {
   elements.widthInput, elements.contrastInput, elements.brightnessInput,
   elements.ditherInput, elements.paletteInput, elements.transparencyInput,
   elements.dropoutsInput, elements.tearInput, elements.aspectInput,
-  elements.transparentBgInput, elements.imagePosInput, elements.layoutSelect,
-  elements.headerTitle, elements.headerSub, ...elements.trackInputs
+  elements.transparentBgInput, elements.imagePosInput, elements.headerTitle,
+  elements.headerSub, ...elements.trackInputs
 ].forEach(input => {
   if (input) input.addEventListener('input', render);
 });
@@ -361,4 +389,5 @@ elements.downloadBtn.addEventListener('click', () => {
 });
 
 // Initial Execution
+syncLayoutUI();
 render();
