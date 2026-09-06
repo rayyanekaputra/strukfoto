@@ -3,7 +3,7 @@ import { RECEIPT_LAYOUTS } from './receipt_layout.js';
 const DEFAULTS = {
   width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
   palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true,
-  aspect: '1:1', transparentBg: false, imagePos: 'top', layout: 'album'
+  aspect: 'native', transparentBg: false, imagePos: 'top', layout: 'album'
 };
 
 const PALETTES = {
@@ -49,7 +49,10 @@ const elements = {
   tearInput: document.getElementById('tearInput'),
   resetBtn: document.getElementById('resetBtn'),
   downloadBtn: document.getElementById('downloadBtn'),
-  canvas: document.getElementById('receiptCanvas')
+  canvas: document.getElementById('receiptCanvas'),
+  // In elements object:
+  ditherScaleInput: document.getElementById('ditherScaleInput'),
+  ditherScaleVal: document.getElementById('ditherScaleVal'),
 };
 
 const ctx = elements.canvas.getContext('2d');
@@ -62,6 +65,9 @@ function updateLabels() {
   if (elements.contrastVal) elements.contrastVal.textContent = elements.contrastInput.value;
   if (elements.brightVal) elements.brightVal.textContent = elements.brightnessInput.value;
   if (elements.dropoutsVal) elements.dropoutsVal.textContent = elements.dropoutsInput.value;
+  if (elements.ditherScaleVal && elements.ditherScaleInput) {
+    elements.ditherScaleVal.textContent = `${elements.ditherScaleInput.value}x`;
+  }
 }
 
 function syncLayoutUI() {
@@ -83,19 +89,25 @@ function syncLayoutUI() {
   }
 }
 
-function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette) {
+function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette, ditherScale = 1) {
+  // 1. Calculate downscaled dimensions based on grain scale
+  const dW = Math.max(1, Math.floor(targetWidth / ditherScale));
+  const dH = Math.max(1, Math.floor(targetHeight / ditherScale));
+
+  // Small processing canvas
   const pCanvas = document.createElement('canvas');
-  pCanvas.width = targetWidth;
-  pCanvas.height = targetHeight;
+  pCanvas.width = dW;
+  pCanvas.height = dH;
   const pCtx = pCanvas.getContext('2d');
 
-  pCtx.drawImage(img, 0, 0, targetWidth, targetHeight);
-  const imgData = pCtx.getImageData(0, 0, targetWidth, targetHeight);
+  pCtx.drawImage(img, 0, 0, dW, dH);
+  const imgData = pCtx.getImageData(0, 0, dW, dH);
   const data = imgData.data;
 
-  for (let y = 0; y < targetHeight; y++) {
-    for (let x = 0; x < targetWidth; x++) {
-      const idx = (y * targetWidth + x) * 4;
+  // 2. Dither pass on low-res buffer
+  for (let y = 0; y < dH; y++) {
+    for (let x = 0; x < dW; x++) {
+      const idx = (y * dW + x) * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
@@ -112,23 +124,27 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
       }
 
       const isPaper = norm > threshold;
-      if (isPaper) {
-        data[idx]     = palette.paper[0];
-        data[idx + 1] = palette.paper[1];
-        data[idx + 2] = palette.paper[2];
-        data[idx + 3] = 255;
-      } else {
-        data[idx]     = palette.ink[0];
-        data[idx + 1] = palette.ink[1];
-        data[idx + 2] = palette.ink[2];
-        data[idx + 3] = 255;
-      }
+      const color = isPaper ? palette.paper : palette.ink;
+
+      data[idx]     = color[0];
+      data[idx + 1] = color[1];
+      data[idx + 2] = color[2];
+      data[idx + 3] = 255;
     }
   }
   pCtx.putImageData(imgData, 0, 0);
-  return pCanvas;
-}
 
+  // 3. Scale up to output resolution with sharp pixel edges
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = targetWidth;
+  outCanvas.height = targetHeight;
+  const outCtx = outCanvas.getContext('2d');
+
+  outCtx.imageSmoothingEnabled = false;
+  outCtx.drawImage(pCanvas, 0, 0, targetWidth, targetHeight);
+
+  return outCanvas;
+}
 function drawBarcode(cCtx, y, width, margin, barHeight, inkColor) {
   cCtx.fillStyle = inkColor;
   let x = margin;
@@ -148,6 +164,7 @@ function render() {
   const contrast = parseFloat(elements.contrastInput.value);
   const brightness = parseFloat(elements.brightnessInput.value);
   const ditherMode = elements.ditherInput.value;
+  const ditherScale = parseInt(elements.ditherScaleInput ? elements.ditherScaleInput.value : 2, 10); // <-- ADD THIS LINE
   const palette = PALETTES[elements.paletteInput.value] || PALETTES.cream;
   const transparencyMode = elements.transparencyInput.value;
   const dropoutDensity = parseFloat(elements.dropoutsInput.value);
@@ -194,7 +211,7 @@ function render() {
 
   let ditheredPhotoCanvas = null;
   if (loadedImage) {
-    ditheredPhotoCanvas = processDitheredPhoto(loadedImage, usablePhotoWidth, photoHeight, brightness, contrast, ditherMode, palette);
+    ditheredPhotoCanvas = processDitheredPhoto(loadedImage, usablePhotoWidth, photoHeight, brightness, contrast, ditherMode, palette, ditherScale);
   }
 
   // Render Translucent Background Watermark
@@ -373,10 +390,10 @@ elements.imageInput.addEventListener('change', (e) => {
 
 [
   elements.widthInput, elements.contrastInput, elements.brightnessInput,
-  elements.ditherInput, elements.paletteInput, elements.transparencyInput,
-  elements.dropoutsInput, elements.tearInput, elements.aspectInput,
-  elements.transparentBgInput, elements.imagePosInput, elements.headerTitle,
-  elements.headerSub, ...elements.trackInputs
+  elements.ditherInput, elements.ditherScaleInput, elements.paletteInput,
+  elements.transparencyInput, elements.dropoutsInput, elements.tearInput,
+  elements.aspectInput, elements.transparentBgInput, elements.imagePosInput,
+  elements.headerTitle, elements.headerSub, ...elements.trackInputs
 ].forEach(input => {
   if (input) input.addEventListener('input', render);
 });

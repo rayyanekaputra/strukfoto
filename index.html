@@ -449,9 +449,9 @@
         <div class="grid-row">
           <div class="select-wrapper">
             <select id="aspectInput">
-              <option value="1:1">ukuran: 1:1 square (1080x1080)</option>
-              <option value="9:16">ukuran: 9:16 story (1080x1920)</option>
-              <option value="native">ukuran: native paper</option>
+                <option value="native">ukuran: native paper</option>
+                <option value="1:1">ukuran: 1:1 square (1080x1080)</option>
+                <option value="9:16">ukuran: 9:16 story (1080x1920)</option>
             </select>
             <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
@@ -555,6 +555,15 @@
               <option value="threshold">mode dither: simple threshold</option>
             </select>
             <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" stroke="#1A1A1A" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+
+        <!-- Dither Grain Scale Slider -->
+        <div class="grid-row sliders-block">
+          <div class="slider-field">
+            <label>ukuran dither dot:</label>
+            <input type="range" id="ditherScaleInput" min="1" max="4" step="1" value="2">
+            <span class="slider-val" id="ditherScaleVal">2x</span>
           </div>
         </div>
 
