@@ -53,6 +53,9 @@ const elements = {
   // In elements object:
   ditherScaleInput: document.getElementById('ditherScaleInput'),
   ditherScaleVal: document.getElementById('ditherScaleVal'),
+
+  modeSelect : document.getElementById('modeSelect'),
+  colorModeSelect : document.getElementById('colorModeSelect'),
 };
 
 const ctx = elements.canvas.getContext('2d');
@@ -89,12 +92,10 @@ function syncLayoutUI() {
   }
 }
 
-function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette, ditherScale = 1) {
-  // 1. Calculate downscaled dimensions based on grain scale
+function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette, ditherScale = 1, colorMode = 'mono') {
   const dW = Math.max(1, Math.floor(targetWidth / ditherScale));
   const dH = Math.max(1, Math.floor(targetHeight / ditherScale));
 
-  // Small processing canvas
   const pCanvas = document.createElement('canvas');
   pCanvas.width = dW;
   pCanvas.height = dH;
@@ -104,7 +105,6 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
   const imgData = pCtx.getImageData(0, 0, dW, dH);
   const data = imgData.data;
 
-  // 2. Dither pass on low-res buffer
   for (let y = 0; y < dH; y++) {
     for (let x = 0; x < dW; x++) {
       const idx = (y * dW + x) * 4;
@@ -112,34 +112,50 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      let norm = ((r * 0.299 + g * 0.587 + b * 0.114) / 255.0) * brightness;
-      norm = (norm - 0.5) * contrast + 0.5;
-      norm = Math.min(1.0, Math.max(0.0, norm));
-
       let threshold = 0.5;
       if (ditherMode === 'bayer4') {
-        threshold = BAYER_4X4[y % 4][x % 4] / 16.0;
+        threshold = (BAYER_4X4[y % 4][x % 4] + 0.5) / 16.0;
       } else if (ditherMode === 'bayer8') {
-        threshold = BAYER_8X8[y % 8][x % 8] / 64.0;
+        threshold = (BAYER_8X8[y % 8][x % 8] + 0.5) / 64.0;
       }
 
-      const isPaper = norm > threshold;
-      const color = isPaper ? palette.paper : palette.ink;
+      if (colorMode === 'mono') {
+        let norm = ((r * 0.299 + g * 0.587 + b * 0.114) / 255.0) * brightness;
+        norm = (norm - 0.5) * contrast + 0.5;
+        norm = Math.min(1.0, Math.max(0.0, norm));
 
-      data[idx]     = color[0];
-      data[idx + 1] = color[1];
-      data[idx + 2] = color[2];
-      data[idx + 3] = 255;
+        const isPaper = norm > threshold;
+        const color = isPaper ? palette.paper : palette.ink;
+        data[idx]     = color[0];
+        data[idx + 1] = color[1];
+        data[idx + 2] = color[2];
+        data[idx + 3] = 255;
+      } else {
+        // RGB Color Dithering (8-Color or 64-Color)
+        const levels = colorMode === 'rgb8' ? 2 : 4;
+        const ditherChannel = (c) => {
+          let norm = (c / 255.0) * brightness;
+          norm = Math.min(1.0, Math.max(0.0, (norm - 0.5) * contrast + 0.5));
+          const step = 1 / (levels - 1);
+          const offset = (threshold - 0.5) * step;
+          const dithered = Math.min(1.0, Math.max(0.0, norm + offset));
+          const q = Math.round(dithered * (levels - 1));
+          return Math.round(q * (255 / (levels - 1)));
+        };
+
+        data[idx]     = ditherChannel(r);
+        data[idx + 1] = ditherChannel(g);
+        data[idx + 2] = ditherChannel(b);
+        data[idx + 3] = 255;
+      }
     }
   }
   pCtx.putImageData(imgData, 0, 0);
 
-  // 3. Scale up to output resolution with sharp pixel edges
   const outCanvas = document.createElement('canvas');
   outCanvas.width = targetWidth;
   outCanvas.height = targetHeight;
   const outCtx = outCanvas.getContext('2d');
-
   outCtx.imageSmoothingEnabled = false;
   outCtx.drawImage(pCanvas, 0, 0, targetWidth, targetHeight);
 
@@ -160,6 +176,8 @@ function drawBarcode(cCtx, y, width, margin, barHeight, inkColor) {
 function render() {
   updateLabels();
 
+  const isPhotoOnly = elements.modeSelect && elements.modeSelect.value === 'photo';
+  const colorMode = elements.colorModeSelect ? elements.colorModeSelect.value : 'mono';
   const printWidth = parseInt(elements.widthInput.value, 10);
   const contrast = parseFloat(elements.contrastInput.value);
   const brightness = parseFloat(elements.brightnessInput.value);
@@ -204,6 +222,8 @@ function render() {
   paperCanvas.height = paperHeight;
   const pCtx = paperCanvas.getContext('2d');
 
+  
+
   if (transparencyMode !== 'paper') {
     pCtx.fillStyle = palette.paperHex;
     pCtx.fillRect(0, 0, printWidth, paperHeight);
@@ -211,7 +231,65 @@ function render() {
 
   let ditheredPhotoCanvas = null;
   if (loadedImage) {
-    ditheredPhotoCanvas = processDitheredPhoto(loadedImage, usablePhotoWidth, photoHeight, brightness, contrast, ditherMode, palette, ditherScale);
+    ditheredPhotoCanvas = processDitheredPhoto(
+      loadedImage, usablePhotoWidth, photoHeight, brightness,
+      contrast, ditherMode, palette, ditherScale, colorMode
+    );
+  }
+
+  // --- PHOTO ONLY PIPELINE BRANCH ---
+  if (isPhotoOnly) {
+    if (!loadedImage) {
+      elements.canvas.width = printWidth;
+      elements.canvas.height = printWidth;
+      ctx.clearRect(0, 0, printWidth, printWidth);
+      elements.downloadBtn.disabled = true;
+      elements.clearBtn.disabled = true;
+      return;
+    }
+
+    const usableWidth = printWidth;
+    const photoHeight = Math.round((loadedImage.height / loadedImage.width) * usableWidth);
+
+    const ditheredPhoto = processDitheredPhoto(
+      loadedImage, usableWidth, photoHeight, brightness, contrast,
+      ditherMode, palette, ditherScale, colorMode
+    );
+
+    if (aspect === 'native') {
+      elements.canvas.width = usableWidth;
+      elements.canvas.height = photoHeight;
+      ctx.clearRect(0, 0, usableWidth, photoHeight);
+      ctx.drawImage(ditheredPhoto, 0, 0);
+    } else {
+      const finalW = 1080;
+      const finalH = aspect === '1:1' ? 1080 : 1920;
+      elements.canvas.width = finalW;
+      elements.canvas.height = finalH;
+
+      if (transparentCardBg) {
+        ctx.clearRect(0, 0, finalW, finalH);
+      } else {
+        ctx.fillStyle = '#121212';
+        ctx.fillRect(0, 0, finalW, finalH);
+      }
+
+      const maxDisplayW = finalW * 0.9;
+      const maxDisplayH = finalH * 0.9;
+      const fitScale = Math.min(maxDisplayW / usableWidth, maxDisplayH / photoHeight);
+
+      const dispW = Math.round(usableWidth * fitScale);
+      const dispH = Math.round(photoHeight * fitScale);
+      const destX = Math.round((finalW - dispW) / 2);
+      const destY = Math.round((finalH - dispH) / 2);
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(ditheredPhoto, destX, destY, dispW, dispH);
+    }
+
+    elements.downloadBtn.disabled = false;
+    elements.clearBtn.disabled = false;
+    return; // Stop execution before receipt rendering
   }
 
   // Render Translucent Background Watermark
@@ -338,12 +416,53 @@ function render() {
 
   elements.downloadBtn.disabled = false;
   elements.clearBtn.disabled = !loadedImage;
+
+  
+}
+
+
+function toggleUIVisibility() {
+  const isPhotoOnly = elements.modeSelect && elements.modeSelect.value === 'photo';
+
+  // Receipt-only control selectors
+  const receiptOnlyElements = [
+    elements.layoutSelect?.closest('.grid-row'),
+    elements.imagePosInput?.closest('.grid-row'),
+    document.querySelector('.text-inputs-block'),
+    elements.transparencyInput?.closest('.grid-row'),
+    elements.dropoutsInput?.closest('.sliders-block'),
+    elements.tearInput?.closest('.grid-row')
+  ];
+
+  receiptOnlyElements.forEach(el => {
+    if (el) el.style.display = isPhotoOnly ? 'none' : '';
+  });
+
+  // Palette input is only useful when in mono mode
+  const paletteRow = elements.paletteInput?.closest('.grid-row');
+  const isMono = elements.colorModeSelect && elements.colorModeSelect.value === 'mono';
+  if (paletteRow) {
+    paletteRow.style.display = (!isPhotoOnly || isMono) ? '' : 'none';
+  }
 }
 
 // Event Listeners
 if (elements.layoutSelect) {
   elements.layoutSelect.addEventListener('change', () => {
     syncLayoutUI();
+    render();
+  });
+}
+if (elements.modeSelect) {
+  elements.modeSelect.addEventListener('change', () => {
+    toggleUIVisibility();
+    render();
+  });
+}
+
+if (elements.colorModeSelect) {
+  elements.colorModeSelect.addEventListener('change', () => {
+    toggleUIVisibility();
     render();
   });
 }
@@ -408,3 +527,4 @@ elements.downloadBtn.addEventListener('click', () => {
 // Initial Execution
 syncLayoutUI();
 render();
+toggleUIVisibility();
