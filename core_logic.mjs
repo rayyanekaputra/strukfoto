@@ -1,4 +1,5 @@
 import { RECEIPT_LAYOUTS } from './receipt_layout.js';
+import { elements } from './elements.mjs';
 
 const DEFAULTS = {
   width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
@@ -25,38 +26,6 @@ const BAYER_8X8 = [
   [15, 47,  7, 39, 13, 45,  5, 37], [63, 31, 55, 23, 61, 29, 53, 21]
 ];
 
-const elements = {
-  imageInput: document.getElementById('imageInput'),
-  clearBtn: document.getElementById('clearBtn'),
-  aspectInput: document.getElementById('aspectInput'),
-  transparentBgInput: document.getElementById('transparentBgInput'),
-  imagePosInput: document.getElementById('imagePosInput'),
-  layoutSelect: document.getElementById('layoutSelect'),
-  headerTitle: document.getElementById('headerTitle'),
-  headerSub: document.getElementById('headerSub'),
-  trackInputs: document.querySelectorAll('.track-input'),
-  widthInput: document.getElementById('widthInput'),
-  widthVal: document.getElementById('widthVal'),
-  contrastInput: document.getElementById('contrastInput'),
-  contrastVal: document.getElementById('contrastVal'),
-  brightnessInput: document.getElementById('brightnessInput'),
-  brightVal: document.getElementById('brightVal'),
-  ditherInput: document.getElementById('ditherInput'),
-  paletteInput: document.getElementById('paletteInput'),
-  transparencyInput: document.getElementById('transparencyInput'),
-  dropoutsInput: document.getElementById('dropoutsInput'),
-  dropoutsVal: document.getElementById('dropoutsVal'),
-  tearInput: document.getElementById('tearInput'),
-  resetBtn: document.getElementById('resetBtn'),
-  downloadBtn: document.getElementById('downloadBtn'),
-  canvas: document.getElementById('receiptCanvas'),
-  // In elements object:
-  ditherScaleInput: document.getElementById('ditherScaleInput'),
-  ditherScaleVal: document.getElementById('ditherScaleVal'),
-
-  modeSelect : document.getElementById('modeSelect'),
-  colorModeSelect : document.getElementById('colorModeSelect'),
-};
 
 const ctx = elements.canvas.getContext('2d');
 let loadedImage = null;
