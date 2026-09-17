@@ -1,67 +1,13 @@
 import { RECEIPT_LAYOUTS } from './receipt_layout.js';
+import { elements } from './elements.mjs';
+import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 
-const DEFAULTS = {
-  width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
-  palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true,
-  aspect: 'native', transparentBg: false, imagePos: 'top', layout: 'album'
-};
-
-const PALETTES = {
-  cream: { paper: [242, 239, 233], ink: [32, 32, 30], paperHex: '#F2EFE9', inkHex: '#20201E' },
-  aged:  { paper: [235, 222, 190], ink: [50, 42, 35], paperHex: '#EBDEBE', inkHex: '#322A23' },
-  blue:  { paper: [240, 244, 248], ink: [25, 40, 90], paperHex: '#F0F4F8', inkHex: '#19285A' },
-  bw:    { paper: [255, 255, 255], ink: [0, 0, 0],  paperHex: '#FFFFFF', inkHex: '#000000' }
-};
-
-const BAYER_4X4 = [
-  [ 0,  8,  2, 10], [12,  4, 14,  6],
-  [ 3, 11,  1,  9], [15,  7, 13,  5]
-];
-
-const BAYER_8X8 = [
-  [ 0, 32,  8, 40,  2, 34, 10, 42], [48, 16, 56, 24, 50, 18, 58, 26],
-  [12, 44,  4, 36, 14, 46,  6, 38], [60, 28, 52, 20, 62, 30, 54, 22],
-  [ 3, 35, 11, 43,  1, 33,  9, 41], [51, 19, 59, 27, 49, 17, 57, 25],
-  [15, 47,  7, 39, 13, 45,  5, 37], [63, 31, 55, 23, 61, 29, 53, 21]
-];
-
-const elements = {
-  imageInput: document.getElementById('imageInput'),
-  clearBtn: document.getElementById('clearBtn'),
-  aspectInput: document.getElementById('aspectInput'),
-  transparentBgInput: document.getElementById('transparentBgInput'),
-  imagePosInput: document.getElementById('imagePosInput'),
-  layoutSelect: document.getElementById('layoutSelect'),
-  headerTitle: document.getElementById('headerTitle'),
-  headerSub: document.getElementById('headerSub'),
-  trackInputs: document.querySelectorAll('.track-input'),
-  widthInput: document.getElementById('widthInput'),
-  widthVal: document.getElementById('widthVal'),
-  contrastInput: document.getElementById('contrastInput'),
-  contrastVal: document.getElementById('contrastVal'),
-  brightnessInput: document.getElementById('brightnessInput'),
-  brightVal: document.getElementById('brightVal'),
-  ditherInput: document.getElementById('ditherInput'),
-  paletteInput: document.getElementById('paletteInput'),
-  transparencyInput: document.getElementById('transparencyInput'),
-  dropoutsInput: document.getElementById('dropoutsInput'),
-  dropoutsVal: document.getElementById('dropoutsVal'),
-  tearInput: document.getElementById('tearInput'),
-  resetBtn: document.getElementById('resetBtn'),
-  downloadBtn: document.getElementById('downloadBtn'),
-  canvas: document.getElementById('receiptCanvas'),
-  // In elements object:
-  ditherScaleInput: document.getElementById('ditherScaleInput'),
-  ditherScaleVal: document.getElementById('ditherScaleVal'),
-
-  modeSelect : document.getElementById('modeSelect'),
-  colorModeSelect : document.getElementById('colorModeSelect'),
-};
-
-const ctx = elements.canvas.getContext('2d');
 let loadedImage = null;
 let cachedDeadRows = [];
 let lastHeight = 0;
+
+const ctx = elements.canvas.getContext('2d');
+
 
 function updateLabels() {
   if (elements.widthVal) elements.widthVal.textContent = elements.widthInput.value;
@@ -126,11 +72,12 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
 
         const isPaper = norm > threshold;
         const color = isPaper ? palette.paper : palette.ink;
-        data[idx]     = color[0];
+        data[idx] = color[0];
         data[idx + 1] = color[1];
         data[idx + 2] = color[2];
         data[idx + 3] = 255;
       } else {
+
         // RGB Color Dithering (8-Color or 64-Color)
         const levels = colorMode === 'rgb8' ? 2 : 4;
         const ditherChannel = (c) => {
@@ -143,7 +90,7 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
           return Math.round(q * (255 / (levels - 1)));
         };
 
-        data[idx]     = ditherChannel(r);
+        data[idx] = ditherChannel(r);
         data[idx + 1] = ditherChannel(g);
         data[idx + 2] = ditherChannel(b);
         data[idx + 3] = 255;
@@ -161,6 +108,7 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
 
   return outCanvas;
 }
+
 function drawBarcode(cCtx, y, width, margin, barHeight, inkColor) {
   cCtx.fillStyle = inkColor;
   let x = margin;
@@ -222,7 +170,7 @@ function render() {
   paperCanvas.height = paperHeight;
   const pCtx = paperCanvas.getContext('2d');
 
-  
+
 
   if (transparencyMode !== 'paper') {
     pCtx.fillStyle = palette.paperHex;
@@ -417,7 +365,7 @@ function render() {
   elements.downloadBtn.disabled = false;
   elements.clearBtn.disabled = !loadedImage;
 
-  
+
 }
 
 
