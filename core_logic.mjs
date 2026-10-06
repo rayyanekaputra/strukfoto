@@ -3,7 +3,7 @@ import { elements } from './elements.mjs';
 import { barcodeBlockHeight, drawBarcode } from './barcodes.mjs';
 import { HEADERS } from './headers.mjs';
 import { ensureFonts, fontString } from './fonts.mjs';
-import { applyPaperShape, drawPerforation, shapeInset } from './shapes.mjs';
+import { applyPaperShape, drawPerforation, shapeInset, shapeSideInset } from './shapes.mjs';
 import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 
 let loadedImage = null;
@@ -162,15 +162,15 @@ function render() {
   const imagePos = elements.imagePosInput.value;
 
   const scale = printWidth / 450.0;
-  const margin = Math.round(20 * scale);
+  const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
+  const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
+  const style = layoutModule.style || {};
+  const margin = Math.round(20 * scale) + shapeSideInset(style.shape, scale);
   const fontSizeTitle = Math.max(8, Math.round(20 * scale));
   const fontSizeSub = Math.max(6, Math.round(12 * scale));
   const fontSizeBody = Math.max(6, Math.round(13 * scale));
   const lineHeight = Math.round(18 * scale);
 
-  const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
-  const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
-  const style = layoutModule.style || {};
   const bodyFontKey = style.font?.body || 'courier';
   const fonts = { body: bodyFontKey, title: style.font?.title || bodyFontKey };
   // Draw now with whatever is loaded; redraw once the layout's web fonts arrive

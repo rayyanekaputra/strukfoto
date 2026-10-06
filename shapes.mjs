@@ -21,6 +21,22 @@ function cutCorner(ctx, x, y, sx, sy, r) {
   ctx.restore();
 }
 
+// Cuts a 45 degree triangle of leg `d` off a corner
+function cutChamfer(ctx, x, y, sx, sy, d) {
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + sx * d, y);
+  ctx.lineTo(x, y + sy * d);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Stable pseudo-random value in [0, 1) for an integer, so torn edges don't change between renders
+function hash01(n) {
+  const v = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
+
 function cutRoundedCorners(ctx, w, h, r) {
   cutCorner(ctx, 0, 0, 1, 1, r);
   cutCorner(ctx, w, 0, -1, 1, r);
@@ -75,6 +91,63 @@ const SHAPES = {
   // Plain slip with large rounded corners
   rounded: (ctx, w, h, scale) => {
     cutRoundedCorners(ctx, w, h, Math.round(22 * scale));
+  },
+
+  // Continuous dot-matrix paper: tractor feed holes down both sides
+  pinfeed: (ctx, w, h, scale) => {
+    const r = Math.max(2, Math.round(4 * scale));
+    const pitch = Math.round(18 * scale);
+    const offset = Math.round(10 * scale);
+    for (let y = pitch / 2; y < h; y += pitch) {
+      cutCircle(ctx, offset, y, r);
+      cutCircle(ctx, w - offset, y, r);
+    }
+  },
+
+  // Irregular hand-torn top and bottom edge
+  torn: (ctx, w, h, scale) => {
+    const depth = Math.max(3, Math.round(9 * scale));
+    const seg = Math.max(2, Math.round(5 * scale));
+    for (let x = 0; x < w; x++) {
+      const i = Math.floor(x / seg);
+      const t = (x % seg) / seg;
+      const top = (hash01(i) * (1 - t) + hash01(i + 1) * t) * depth;
+      const bottom = (hash01(i + 5000) * (1 - t) + hash01(i + 5001) * t) * depth;
+      ctx.fillRect(x, 0, 1, Math.round(top));
+      ctx.fillRect(x, h - Math.round(bottom), 1, Math.round(bottom));
+    }
+  },
+
+  // Coat check or laundry tag: clipped top corners and a punched hole
+  tag: (ctx, w, h, scale) => {
+    const d = Math.round(26 * scale);
+    cutChamfer(ctx, 0, 0, 1, 1, d);
+    cutChamfer(ctx, w, 0, -1, 1, d);
+    cutCircle(ctx, w / 2, Math.round(16 * scale), Math.max(3, Math.round(7 * scale)));
+    cutRoundedCorners(ctx, w, h, Math.round(6 * scale));
+  },
+
+  // Carnival roll ticket: inward round notches at every corner
+  admit: (ctx, w, h, scale) => {
+    const r = Math.round(16 * scale);
+    cutCircle(ctx, 0, 0, r);
+    cutCircle(ctx, w, 0, r);
+    cutCircle(ctx, 0, h, r);
+    cutCircle(ctx, w, h, r);
+  },
+
+  // Cinema ticket: chamfered corners and side notches at the tear-off line
+  diecut: (ctx, w, h, scale, perfY) => {
+    const d = Math.round(12 * scale);
+    cutChamfer(ctx, 0, 0, 1, 1, d);
+    cutChamfer(ctx, w, 0, -1, 1, d);
+    cutChamfer(ctx, 0, h, 1, -1, d);
+    cutChamfer(ctx, w, h, -1, -1, d);
+    if (perfY) {
+      const r = Math.round(9 * scale);
+      cutCircle(ctx, 0, perfY, r);
+      cutCircle(ctx, w, perfY, r);
+    }
   }
 };
 
@@ -84,11 +157,25 @@ const INSETS = {
   ticket: (scale) => Math.round(10 * scale),
   stub: (scale) => Math.round(12 * scale),
   scallop: (scale) => Math.max(3, Math.round(5 * scale)) + Math.round(10 * scale),
-  rounded: (scale) => Math.round(16 * scale)
+  rounded: (scale) => Math.round(16 * scale),
+  pinfeed: (scale) => Math.round(10 * scale),
+  torn: (scale) => Math.round(16 * scale),
+  tag: (scale) => Math.round(28 * scale),
+  admit: (scale) => Math.round(14 * scale),
+  diecut: (scale) => Math.round(12 * scale)
+};
+
+// Extra horizontal margin for shapes that cut into the sides
+const SIDE_INSETS = {
+  pinfeed: (scale) => Math.round(14 * scale)
 };
 
 export function shapeInset(shape, scale) {
   return (INSETS[shape] || INSETS.strip)(scale);
+}
+
+export function shapeSideInset(shape, scale) {
+  return SIDE_INSETS[shape] ? SIDE_INSETS[shape](scale) : 0;
 }
 
 export function applyPaperShape(ctx, shape, w, h, scale, perfY) {
