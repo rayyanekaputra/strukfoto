@@ -23,9 +23,16 @@ Guidance for AI coding agents working on **strukfoto**: a browser tool that turn
 
 The pipeline: scale to the target width, then apply grayscale, brightness, and contrast, then Bayer or threshold dither, then map to paper and ink colors, then add printhead dropout rows, then serrate the edges with a sine mask. The result is composed on a canvas with the receipt layout text.
 
+## Environment and file safety
+
+- **The user's runtime and package manager is Bun.** Use `bun` / `bunx` for anything that needs a JS runtime (serving, one-off scripts, syntax checks). Don't reach for `node`, `npm`, or `npx`; they aren't installed.
+- **Work strictly inside the project working directory.** Never write, create, or delete files outside it. That includes `/tmp`, `~`, Firefox/Chrome profile folders, and any scratchpad or system temp directory. Writing outside the project is dangerous and not allowed.
+- Put temporary files (screenshots, scratch scripts, browser profiles) in a throwaway folder inside the project, such as `./.tmp/`, and delete it when done. Don't commit it.
+- Read only from the working directory too. If something outside it seems needed, ask the user first.
+
 ## Running and testing
 
-- No install needed. Serve the directory statically and open it in a browser, e.g. `python3 -m http.server` or `bunx serve`. ES modules do not load over `file://`.
+- No install needed. Serve the directory statically and open it in a browser, e.g. `bunx serve` (or `python3 -m http.server`). ES modules do not load over `file://`.
 - There is no test suite or linter. Verify changes by loading the page, uploading an image, and exercising the controls. Test at phone width (DevTools device emulation) as well as desktop.
 - Ignore everything in `pocs/` (including the Python files). Don't read, run, update, or keep them in sync with the web app.
 
