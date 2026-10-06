@@ -2,6 +2,7 @@ import { RECEIPT_LAYOUTS } from './receipt_layout.js';
 import { elements } from './elements.mjs';
 import { barcodeBlockHeight, drawBarcode } from './barcodes.mjs';
 import { HEADERS } from './headers.mjs';
+import { ensureFonts, fontString } from './fonts.mjs';
 import { applyPaperShape, drawPerforation, shapeInset } from './shapes.mjs';
 import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 
@@ -170,6 +171,11 @@ function render() {
   const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
   const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
   const style = layoutModule.style || {};
+  const bodyFontKey = style.font?.body || 'courier';
+  const fonts = { body: bodyFontKey, title: style.font?.title || bodyFontKey };
+  // Draw now with whatever is loaded; redraw once the layout's web fonts arrive
+  ensureFonts([fonts.body, fonts.title], render);
+  const bodyFont = fontString(fonts.body, fontSizeBody);
 
   const usablePhotoWidth = printWidth - margin * 2;
   const barcodeHeight = barcodeBlockHeight(style.barcode, usablePhotoWidth, scale);
@@ -248,7 +254,7 @@ function render() {
   const padTop = inset + Math.round(14 * scale);
   const padBottom = inset + Math.round(18 * scale);
 
-  measureCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+  measureCtx.font = bodyFont;
   const charWidth = measureCtx.measureText('M').width || fontSizeBody * 0.6;
   const maxChars = Math.max(18, Math.floor(usablePhotoWidth / charWidth));
   const dividerLine = (style.divider?.major || '=').repeat(maxChars);
@@ -294,13 +300,14 @@ function render() {
       sub: elements.headerSub.value,
       maxChars,
       dividerLine,
+      fonts,
       ink: inkColor,
       paper: palette.paperHex,
       // Ink-transparent mode would hide filled shapes, so headers fall back to plain text
       solid: transparencyMode !== 'ink'
     }));
 
-    pCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+    pCtx.font = bodyFont;
     pCtx.fillStyle = inkColor;
     pCtx.textAlign = 'left';
     pCtx.fillText('DATE: 2026-09-06', margin, curY);
@@ -331,7 +338,7 @@ function render() {
 
     drawBarcode(pCtx, style.barcode, { x: margin, y: curY, w: usablePhotoWidth, h: barcodeHeight, rng, scale, ink: inkColor });
     if (barcodeHeight) curY += barcodeHeight + Math.round(15 * scale);
-    pCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+    pCtx.font = bodyFont;
     pCtx.textAlign = 'center';
     pCtx.fillText(layoutModule.fields?.footerMsg || 'THANK YOU FOR LISTENING', printWidth / 2, curY);
     return curY;

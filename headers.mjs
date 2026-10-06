@@ -1,18 +1,22 @@
 // Receipt header styles. Each draws the title and subtitle from baseline `y` and returns the next y.
 
-const FAMILY = '"Courier New", monospace';
+import { fontString } from './fonts.mjs';
 
-function font(size, bold = false) {
-  return `${bold ? 'bold ' : ''}${size}px ${FAMILY}`;
+function bodyFont(h, size, bold = false) {
+  return fontString(h.fonts.body, size, bold);
 }
 
-// Largest font size (up to `size`) at which `text` fits in `maxW`
-function fitFont(ctx, text, size, maxW, bold = true) {
+function titleFont(h, size) {
+  return fontString(h.fonts.title, size, true);
+}
+
+// Largest title font size (up to `size`) at which `text` fits in `maxW`
+function fitFont(ctx, h, text, size, maxW) {
   let s = size;
-  ctx.font = font(s, bold);
+  ctx.font = titleFont(h, s);
   while (s > 8 && ctx.measureText(text).width > maxW) {
     s -= 1;
-    ctx.font = font(s, bold);
+    ctx.font = titleFont(h, s);
   }
   return s;
 }
@@ -33,16 +37,16 @@ export const HEADERS = {
   album(ctx, h) {
     let y = h.y;
     ctx.textAlign = 'center';
-    ctx.font = font(h.sizeSub);
+    ctx.font = bodyFont(h, h.sizeSub);
     ctx.fillText('* NOW PLAYING *', h.cx, y);
     y += h.lineHeight * 1.1;
 
     const title = h.title.toUpperCase();
-    ctx.font = font(fitFont(ctx, title, Math.round(h.sizeTitle * 1.25), h.innerW));
+    ctx.font = titleFont(h, fitFont(ctx, h, title, Math.round(h.sizeTitle * 1.25), h.innerW));
     ctx.fillText(title, h.cx, y);
     y += h.lineHeight * 1.1;
 
-    ctx.font = font(h.sizeBody);
+    ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(flank(h.sub.toUpperCase(), '-', h.maxChars), h.cx, y);
     y += h.lineHeight;
     ctx.fillText(h.dividerLine, h.cx, y);
@@ -54,17 +58,17 @@ export const HEADERS = {
     let y = h.y;
     ctx.textAlign = 'center';
     const title = `*${h.title.toUpperCase()}*`;
-    ctx.font = font(fitFont(ctx, title, Math.round(h.sizeTitle * 1.3), h.innerW));
+    ctx.font = titleFont(h, fitFont(ctx, h, title, Math.round(h.sizeTitle * 1.3), h.innerW));
     ctx.fillText(title, h.cx, y);
     y += h.lineHeight;
 
-    ctx.font = font(h.sizeSub);
+    ctx.font = bodyFont(h, h.sizeSub);
     ctx.fillText(h.sub.toUpperCase(), h.cx, y);
     y += h.lineHeight * 0.9;
     ctx.fillText('WELCOME - PLEASE COME AGAIN', h.cx, y);
     y += h.lineHeight * 0.8;
 
-    ctx.font = font(h.sizeBody);
+    ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(h.dividerLine, h.cx, y);
     return y + h.lineHeight;
   },
@@ -81,19 +85,19 @@ export const HEADERS = {
       ctx.fillRect(h.margin, top, h.innerW, bandH);
       ctx.fillStyle = h.paper;
     }
-    ctx.font = font(h.sizeSub);
+    ctx.font = bodyFont(h, h.sizeSub);
     const labelW = ctx.measureText(label).width;
     ctx.textAlign = 'left';
-    ctx.font = font(fitFont(ctx, title, h.sizeTitle, h.innerW - labelW - pad * 3));
+    ctx.font = titleFont(h, fitFont(ctx, h, title, h.sizeTitle, h.innerW - labelW - pad * 3));
     ctx.fillText(title, h.margin + pad, top + bandH / 2 + h.sizeTitle * 0.35);
     ctx.textAlign = 'right';
-    ctx.font = font(h.sizeSub);
+    ctx.font = bodyFont(h, h.sizeSub);
     ctx.fillText(label, h.margin + h.innerW - pad, top + bandH / 2 + h.sizeSub * 0.35);
     ctx.fillStyle = h.ink;
 
     let y = top + bandH + h.lineHeight;
     ctx.textAlign = 'center';
-    ctx.font = font(h.sizeBody);
+    ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(flank(h.sub.toUpperCase(), '>', h.maxChars), h.cx, y);
     y += h.lineHeight;
     ctx.fillText(h.dividerLine, h.cx, y);
@@ -111,11 +115,11 @@ export const HEADERS = {
 
     const title = h.title.toUpperCase();
     ctx.textAlign = 'center';
-    ctx.font = font(fitFont(ctx, title, h.sizeTitle, h.innerW - pad * 4));
+    ctx.font = titleFont(h, fitFont(ctx, h, title, h.sizeTitle, h.innerW - pad * 4));
     ctx.fillText(title, h.cx, top + boxH / 2 + h.sizeTitle * 0.35);
 
     const sub = h.sub.toUpperCase();
-    ctx.font = font(h.sizeSub, true);
+    ctx.font = bodyFont(h, h.sizeSub, true);
     const tabW = Math.min(h.innerW, Math.round(ctx.measureText(sub).width + pad * 4));
     const tabH = Math.round(h.sizeSub * 1.7);
     const tabTop = top + boxH;
@@ -127,7 +131,7 @@ export const HEADERS = {
     ctx.fillStyle = h.ink;
 
     let y = tabTop + tabH + h.lineHeight;
-    ctx.font = font(h.sizeBody);
+    ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(h.dividerLine, h.cx, y);
     return y + h.lineHeight;
   },
@@ -137,14 +141,14 @@ export const HEADERS = {
     let y = h.y;
     ctx.textAlign = 'center';
     const title = spaced(h.title.toUpperCase());
-    ctx.font = font(fitFont(ctx, title, h.sizeTitle, h.innerW));
+    ctx.font = titleFont(h, fitFont(ctx, h, title, h.sizeTitle, h.innerW));
     ctx.fillText(title, h.cx, y);
     y += h.lineHeight * 1.1;
 
-    ctx.font = font(h.sizeSub);
+    ctx.font = bodyFont(h, h.sizeSub);
     ctx.fillText(flank(h.sub.toUpperCase(), '~*~', h.maxChars), h.cx, y);
     y += h.lineHeight * 0.9;
-    ctx.font = font(h.sizeBody);
+    ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(h.dividerLine, h.cx, y);
     return y + h.lineHeight;
   },
@@ -154,19 +158,19 @@ export const HEADERS = {
     let y = h.y;
     ctx.textAlign = 'center';
     const title = h.title.toUpperCase();
-    ctx.font = font(fitFont(ctx, title, Math.round(h.sizeTitle * 1.15), h.innerW));
+    ctx.font = titleFont(h, fitFont(ctx, h, title, Math.round(h.sizeTitle * 1.15), h.innerW));
     ctx.fillText(title, h.cx, y);
     const underW = Math.min(h.innerW, Math.round(ctx.measureText(title).width));
     y += Math.round(h.lineHeight * 0.3);
     ctx.fillRect(Math.round(h.cx - underW / 2), y, underW, Math.max(2, Math.round(3 * h.scale)));
     y += h.lineHeight * 0.9;
 
-    ctx.font = font(h.sizeSub);
+    ctx.font = bodyFont(h, h.sizeSub);
     ctx.fillText(h.sub.toUpperCase(), h.cx, y);
     y += h.lineHeight * 0.9;
     ctx.fillText('CUSTOMER COPY', h.cx, y);
     y += h.lineHeight * 0.8;
-    ctx.font = font(h.sizeBody);
+    ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(h.dividerLine, h.cx, y);
     return y + h.lineHeight;
   }

@@ -61,11 +61,11 @@ The pipeline: scale to the target width, then apply grayscale, brightness, and c
 
 ## Known issues to be aware of
 
-- `index.html` loads the entry point with `<script src="./core_logic.mjs"></script>`, but `core_logic.mjs` uses `import`. This needs `type="module"` to work. Check this before assuming the page is broken or working.
 - `core_logic.mjs` contains a leftover `// <-- ADD THIS LINE` comment (in `render()`); remove it when touching that line.
 - The project was originally generated with Gemini, so expect some inconsistent naming and dead code. Clean up only what you're already touching, and keep diffs focused.
 
 ## Working with the user
 
+- **Plan first, then wait for "GO".** For every feature or fix request, start by presenting an implementation plan (what changes, which files, any trade-offs) plus any questions you have. Do not edit code until the user reviews it and replies "GO".
 - Ask before adding dependencies, a build step, or changing the client-only architecture.
 - Keep changes small and focused; this is a simple tool and should stay simple.

@@ -10,7 +10,7 @@ function row(left, right, maxChars, fillChar = ' ') {
 
 export const RECEIPT_LAYOUTS = {
   album: {
-    style: { shape: 'strip', barcode: 'code128', header: 'album', divider: { major: '=', minor: '-' } },
+    style: { shape: 'strip', barcode: 'code128', header: 'album', font: { body: 'thermal', title: 'vt' }, divider: { major: '=', minor: '-' } },
     name: 'album receipt',
     fields: {
       footerMsg: 'THANK YOU FOR LISTENING',
@@ -49,7 +49,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   grocery: {
-    style: { shape: 'strip', barcode: 'code128', header: 'grocery', divider: { major: '*', minor: '-' } },
+    style: { shape: 'strip', barcode: 'code128', header: 'grocery', font: { body: 'thermal', title: 'thermal' }, divider: { major: '*', minor: '-' } },
     name: 'grocery / market',
     fields: {
       footerMsg: '*** YOU SAVED $4.20 TODAY! ***',
@@ -96,7 +96,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   airline: {
-    style: { shape: 'stub', barcode: 'pdf417', header: 'airline', divider: { major: '=', minor: '-' } },
+    style: { shape: 'stub', barcode: 'pdf417', header: 'airline', font: { body: 'bank', title: 'ticket' }, divider: { major: '=', minor: '-' } },
     name: 'airline boarding pass',
     fields: {
       footerMsg: 'HAVE A GOOD FLIGHT',
@@ -139,7 +139,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   parking: {
-    style: { shape: 'ticket', barcode: 'code39', header: 'parking', divider: { major: '#', minor: '-' } },
+    style: { shape: 'ticket', barcode: 'code39', header: 'parking', font: { body: 'typewriter', title: 'typewriter' }, divider: { major: '#', minor: '-' } },
     name: 'parking ticket',
     fields: {
       footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *',
@@ -179,7 +179,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   concert: {
-    style: { shape: 'scallop', barcode: 'qr', header: 'concert', divider: { major: '~', minor: '.' } },
+    style: { shape: 'scallop', barcode: 'qr', header: 'concert', font: { body: 'thermal', title: 'ticket' }, divider: { major: '~', minor: '.' } },
     name: 'concert stub',
     fields: {
       footerMsg: 'VOID IF DETACHED // NO REFUNDS',
@@ -215,7 +215,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   atm: {
-    style: { shape: 'rounded', barcode: 'none', header: 'atm', divider: { major: '-', minor: '.' } },
+    style: { shape: 'rounded', barcode: 'none', header: 'atm', font: { body: 'bank', title: 'bank' }, divider: { major: '-', minor: '.' } },
     name: 'atm slip',
     fields: {
       footerMsg: 'RECORD COPY - RETAIN FOR FILES',
