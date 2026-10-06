@@ -13,8 +13,8 @@ export const RECEIPT_LAYOUTS = {
     name: 'album receipt',
     fields: {
       footerMsg: 'THANK YOU FOR LISTENING',
-      sectionTitle: 'TRACKLIST ITEMS',
-      placeholders: ['Track 1 Title', 'Track 2 Title', 'Track 3 Title', 'Track 4 Title', 'Track 5 Title']
+      sectionTitle: 'tracklist items',
+      placeholders: ['track 1 title', 'track 2 title', 'track 3 title', 'track 4 title', 'track 5 title']
     },
     getHeight: ({ lineHeight, scale, photoHeight, isWatermark, items, barcodeHeight }) => {
       const headerH = 25 * scale + lineHeight * 4;
@@ -58,8 +58,8 @@ export const RECEIPT_LAYOUTS = {
     name: 'grocery / market',
     fields: {
       footerMsg: '*** YOU SAVED $4.20 TODAY! ***',
-      sectionTitle: 'GROCERY ITEMS',
-      placeholders: ['Item 1 (e.g. Iced Coffee)', 'Item 2 (e.g. Fresh Milk)', 'Item 3 (e.g. Bakery)', 'Item 4', 'Item 5']
+      sectionTitle: 'grocery items',
+      placeholders: ['item 1 (e.g. iced coffee)', 'item 2 (e.g. fresh milk)', 'item 3 (e.g. bakery)', 'item 4', 'item 5']
     },
     getHeight: ({ lineHeight, scale, photoHeight, isWatermark, items, barcodeHeight }) => {
       const headerH = 25 * scale + lineHeight * 4;
@@ -111,8 +111,8 @@ export const RECEIPT_LAYOUTS = {
     name: 'airline boarding pass',
     fields: {
       footerMsg: 'HAVE A GOOD FLIGHT',
-      sectionTitle: 'PASSENGER & FLIGHT DETAILS',
-      placeholders: ['Passenger Name (e.g. RAYYAN/EKA)', 'Additional Note / Class', 'Special Request', '', '']
+      sectionTitle: 'passenger & flight details',
+      placeholders: ['passenger name (e.g. rayyan/eka)', 'additional note / class', 'special request', '', '']
     },
     getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
       const headerH = 25 * scale + lineHeight * 4;
@@ -159,8 +159,8 @@ export const RECEIPT_LAYOUTS = {
     name: 'parking ticket',
     fields: {
       footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *',
-      sectionTitle: 'VEHICLE & TICKET DETAILS',
-      placeholders: ['Plate Number (e.g. B 1234 XYZ)', 'Parking Slot Code', '', '', '']
+      sectionTitle: 'vehicle & ticket details',
+      placeholders: ['plate number (e.g. b 1234 xyz)', 'parking slot code', '', '', '']
     },
     getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
       const headerH = 25 * scale + lineHeight * 4;
@@ -205,8 +205,8 @@ export const RECEIPT_LAYOUTS = {
     name: 'concert stub',
     fields: {
       footerMsg: 'VOID IF DETACHED // NO REFUNDS',
-      sectionTitle: 'PASS HOLDER & VENUE INFO',
-      placeholders: ['Ticket Holder (e.g. VIP GUEST)', 'Gate / Entry Note', '', '', '']
+      sectionTitle: 'pass holder & venue info',
+      placeholders: ['ticket holder (e.g. vip guest)', 'gate / entry note', '', '', '']
     },
     getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
       const headerH = 25 * scale + lineHeight * 4;
@@ -247,8 +247,8 @@ export const RECEIPT_LAYOUTS = {
     name: 'atm slip',
     fields: {
       footerMsg: 'RECORD COPY - RETAIN FOR FILES',
-      sectionTitle: 'ACCOUNT & ACCOUNT HOLDER',
-      placeholders: ['Account Holder Name', 'Transaction Note', '', '', '']
+      sectionTitle: 'account & account holder',
+      placeholders: ['account holder name', 'transaction note', '', '', '']
     },
     getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
       const headerH = 25 * scale + lineHeight * 4;
