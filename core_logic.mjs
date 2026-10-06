@@ -5,6 +5,9 @@ import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 let loadedImage = null;
 let cachedDeadRows = [];
 let lastHeight = 0;
+let imageId = 0;
+let rngSeed = (Math.random() * 0xffffffff) >>> 0;
+let photoCache = { key: '', canvas: null };
 
 const ctx = elements.canvas.getContext('2d');
 
@@ -36,6 +39,30 @@ function syncLayoutUI() {
       input.value = defaultValue;
     });
   }
+}
+
+// Small seeded PRNG (mulberry32) so barcode and receipt number stay stable across renders
+function makeRng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Re-dither only when the photo or a dither-related setting changed
+function getDitheredPhoto(width, height, brightness, contrast, ditherMode, palette, ditherScale, colorMode) {
+  const key = [imageId, width, height, brightness, contrast, ditherMode, palette.paperHex, palette.inkHex, ditherScale, colorMode].join('|');
+  if (photoCache.key !== key) {
+    photoCache = {
+      key,
+      canvas: processDitheredPhoto(loadedImage, width, height, brightness, contrast, ditherMode, palette, ditherScale, colorMode)
+    };
+  }
+  return photoCache.canvas;
 }
 
 function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contrast, ditherMode, palette, ditherScale = 1, colorMode = 'mono') {
@@ -109,13 +136,13 @@ function processDitheredPhoto(img, targetWidth, targetHeight, brightness, contra
   return outCanvas;
 }
 
-function drawBarcode(cCtx, y, width, margin, barHeight, inkColor) {
+function drawBarcode(cCtx, y, width, margin, barHeight, inkColor, rng) {
   cCtx.fillStyle = inkColor;
   let x = margin;
   const endX = width - margin;
   while (x < endX) {
-    const barW = Math.floor(Math.random() * 3) + 1;
-    const gap = Math.floor(Math.random() * 3) + 1;
+    const barW = Math.floor(rng() * 3) + 1;
+    const gap = Math.floor(rng() * 3) + 1;
     cCtx.fillRect(x, y, barW, barHeight);
     x += barW + gap;
   }
@@ -130,7 +157,7 @@ function render() {
   const contrast = parseFloat(elements.contrastInput.value);
   const brightness = parseFloat(elements.brightnessInput.value);
   const ditherMode = elements.ditherInput.value;
-  const ditherScale = parseInt(elements.ditherScaleInput ? elements.ditherScaleInput.value : 2, 10); // <-- ADD THIS LINE
+  const ditherScale = parseInt(elements.ditherScaleInput ? elements.ditherScaleInput.value : 2, 10);
   const palette = PALETTES[elements.paletteInput.value] || PALETTES.cream;
   const transparencyMode = elements.transparencyInput.value;
   const dropoutDensity = parseFloat(elements.dropoutsInput.value);
@@ -139,6 +166,7 @@ function render() {
   const transparentCardBg = elements.transparentBgInput.checked;
   const imagePos = elements.imagePosInput.value;
 
+  const rng = makeRng(rngSeed);
   const scale = printWidth / 450.0;
   const margin = Math.round(20 * scale);
   const fontSizeTitle = Math.max(12, Math.round(20 * scale));
@@ -179,8 +207,8 @@ function render() {
 
   let ditheredPhotoCanvas = null;
   if (loadedImage) {
-    ditheredPhotoCanvas = processDitheredPhoto(
-      loadedImage, usablePhotoWidth, photoHeight, brightness,
+    ditheredPhotoCanvas = getDitheredPhoto(
+      usablePhotoWidth, photoHeight, brightness,
       contrast, ditherMode, palette, ditherScale, colorMode
     );
   }
@@ -199,8 +227,8 @@ function render() {
     const usableWidth = printWidth;
     const photoHeight = Math.round((loadedImage.height / loadedImage.width) * usableWidth);
 
-    const ditheredPhoto = processDitheredPhoto(
-      loadedImage, usableWidth, photoHeight, brightness, contrast,
+    const ditheredPhoto = getDitheredPhoto(
+      usableWidth, photoHeight, brightness, contrast,
       ditherMode, palette, ditherScale, colorMode
     );
 
@@ -267,7 +295,7 @@ function render() {
   curY += lineHeight;
 
   pCtx.textAlign = 'left';
-  pCtx.fillText(`DATE: 2026-09-06      REC #: ${Math.floor(1000 + Math.random() * 9000)}`, margin, curY);
+  pCtx.fillText(`DATE: 2026-09-06      REC #: ${Math.floor(1000 + rng() * 9000)}`, margin, curY);
   curY += lineHeight;
 
   curY = layoutModule.drawContent(pCtx, {
@@ -289,7 +317,7 @@ function render() {
     imagePos
   });
 
-  drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight, inkColor);
+  drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight, inkColor, rng);
   curY += barcodeHeight + Math.round(15 * scale);
   pCtx.textAlign = 'center';
   const footerMsg = layoutModule.fields?.footerMsg || 'THANK YOU FOR LISTENING';
@@ -433,6 +461,11 @@ elements.resetBtn.addEventListener('click', () => {
   render();
 });
 
+elements.reshuffleBtn.addEventListener('click', () => {
+  rngSeed = (Math.random() * 0xffffffff) >>> 0;
+  render();
+});
+
 elements.clearBtn.addEventListener('click', () => {
   elements.imageInput.value = '';
   loadedImage = null;
@@ -448,6 +481,7 @@ elements.imageInput.addEventListener('change', (e) => {
     const img = new Image();
     img.onload = () => {
       loadedImage = img;
+      imageId++;
       render();
     };
     img.src = event.target.result;
