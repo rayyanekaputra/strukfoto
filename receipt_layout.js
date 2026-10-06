@@ -252,5 +252,146 @@ export const RECEIPT_LAYOUTS = {
       if (imagePos === 'bottom') y = renderPhoto(y);
       return y;
     }
+  },
+
+  cafe: {
+    style: { shape: 'rounded', barcode: 'qr', header: 'cafe', font: { body: 'thermal', title: 'thermal' }, divider: { major: '=', minor: '-' } },
+    name: 'coffee shop order',
+    fields: {
+      footerMsg: 'SEE YOU TOMORROW :)',
+      sectionTitle: 'drinks & food',
+      placeholders: ['iced kopi susu', 'hot cappuccino', 'butter croissant', 'item 4', 'item 5']
+    },
+    drawContent: (pCtx, { fx, margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
+      let y = curY;
+      if (imagePos === 'top') y = renderPhoto(y);
+
+      y = fx.invertBar('ORDER #042', y, { tall: true });
+      pCtx.fillText(row('DINE IN', 'BARISTA: EKA', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(subDividerLine, margin, y);
+      y += lineHeight;
+
+      const prices = ['28.000', '32.000', '24.000', '18.000', '21.000'];
+      const modifiers = [['+ LESS SUGAR', '+ EXTRA SHOT'], ['+ OAT MILK'], ['+ WARMED UP']];
+      items.forEach((text, i) => {
+        if (!text) return;
+        pCtx.fillText(row(`1 ${text}`, prices[i % prices.length], maxChars), margin, y);
+        y += lineHeight;
+        (modifiers[i] || []).forEach((mod) => {
+          pCtx.fillText(`    ${mod}`, margin, y);
+          y += lineHeight;
+        });
+      });
+
+      if (imagePos === 'middle') y = renderPhoto(y);
+
+      pCtx.fillText(subDividerLine, margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('SUBTOTAL', '84.000', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('PB1 (10%)', '8.400', maxChars), margin, y);
+      y += lineHeight;
+      y = fx.bigText(row('TOTAL', 'IDR 92.400', Math.floor(maxChars / 1.4)), y, { font: 'body' });
+      pCtx.fillText(row('PAID BY', 'QRIS', maxChars), margin, y);
+      y += Math.round(22 * scale);
+
+      if (imagePos === 'bottom') y = renderPhoto(y);
+      return y;
+    }
+  },
+
+  invoice: {
+    style: { shape: 'pinfeed', barcode: 'none', header: 'invoice', font: { body: 'dotmatrix', title: 'dotmatrix' }, divider: { major: '=', minor: '-' } },
+    name: 'dot matrix invoice',
+    fields: {
+      footerMsg: 'PAYMENT DUE WITHIN 30 DAYS',
+      sectionTitle: 'invoice line items',
+      placeholders: ['photo session', 'retouching', 'print a4 glossy', 'item 4', 'item 5']
+    },
+    drawContent: (pCtx, { fx, printWidth, margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
+      let y = curY;
+      if (imagePos === 'top') y = renderPhoto(y);
+
+      pCtx.fillText(row('INVOICE NO:', 'INV/2026/0042', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('BILL TO:', 'STRUKFOTO CO.', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('TERMS:', 'NET 30', maxChars), margin, y);
+      y += lineHeight;
+
+      pCtx.fillText(subDividerLine, margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('QTY  DESCRIPTION', 'AMOUNT', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(subDividerLine, margin, y);
+      y += lineHeight;
+
+      const filled = items.filter(Boolean);
+      const amounts = ['750.00', '250.00', '120.00', '90.00', '60.00'];
+      fx.greenBands(y, filled.length);
+      filled.forEach((text, i) => {
+        pCtx.fillText(row(`${String(i + 1).padStart(2, '0')}   ${text}`, amounts[i % amounts.length], maxChars), margin, y);
+        y += lineHeight;
+      });
+
+      if (imagePos === 'middle') y = renderPhoto(y);
+
+      pCtx.fillText(subDividerLine, margin, y);
+      y += lineHeight;
+      const totalsTop = y;
+      pCtx.fillText(row('SUBTOTAL', '1,270.00', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('VAT 11%', '139.70', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('TOTAL DUE', '1,409.70', maxChars), margin, y);
+      y += lineHeight;
+      fx.stamp('PAID', printWidth * 0.36, totalsTop + lineHeight * 0.4, { angle: -12, color: 'red' });
+      y += Math.round(22 * scale);
+
+      if (imagePos === 'bottom') y = renderPhoto(y);
+      return y;
+    }
+  },
+
+  cinema: {
+    style: { shape: 'diecut', barcode: 'code128', header: 'cinema', font: { body: 'thermal', title: 'ticket' }, divider: { major: '=', minor: '-' } },
+    name: 'cinema ticket',
+    fields: {
+      footerMsg: 'NO RE-ENTRY // ENJOY THE SHOW',
+      sectionTitle: 'movie & seat details',
+      placeholders: ['the receipt (2026)', '2d | 128 min', '', '', '']
+    },
+    drawContent: (pCtx, { fx, margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos, markPerforation }) => {
+      let y = curY;
+      if (imagePos === 'top') y = renderPhoto(y);
+
+      const movie = (items[0] || 'THE RECEIPT').toUpperCase();
+      y = fx.bigText(movie, y + Math.round(lineHeight * 0.6));
+      y += Math.round(lineHeight * 0.2);
+      pCtx.fillText(row('RATED: 13+', items[1] || '2D | 128 MIN', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(subDividerLine, margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('STUDIO 03', 'ROW F | SEAT 12', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('SAT 06 SEP 2026', '19:30', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('PRICE', 'IDR 50.000', maxChars), margin, y);
+      y += lineHeight;
+
+      if (imagePos === 'middle') y = renderPhoto(y);
+
+      markPerforation(y - Math.round(lineHeight * 0.4));
+      y += Math.round(lineHeight * 1.1);
+      y = fx.bigText('ADMIT ONE', y, { tall: false, wide: true });
+      pCtx.fillText(row(movie, 'F-12', maxChars), margin, y);
+      y += lineHeight;
+      pCtx.fillText(row('STUDIO 03', '19:30', maxChars), margin, y);
+      y += Math.round(22 * scale);
+
+      if (imagePos === 'bottom') y = renderPhoto(y);
+      return y;
+    }
   }
 };

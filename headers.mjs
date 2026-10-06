@@ -173,5 +173,76 @@ export const HEADERS = {
     ctx.font = bodyFont(h, h.sizeBody);
     ctx.fillText(h.dividerLine, h.cx, y);
     return y + h.lineHeight;
+  },
+
+  // Coffee shop: big shop name, subtitle, opening hours
+  cafe(ctx, h) {
+    let y = h.y;
+    ctx.textAlign = 'center';
+    const title = h.title.toUpperCase();
+    ctx.font = titleFont(h, fitFont(ctx, h, title, Math.round(h.sizeTitle * 1.35), h.innerW));
+    ctx.fillText(title, h.cx, y);
+    y += h.lineHeight * 1.1;
+
+    ctx.font = bodyFont(h, h.sizeSub);
+    ctx.fillText(flank(h.sub.toUpperCase(), '~', h.maxChars), h.cx, y);
+    y += h.lineHeight * 0.9;
+    ctx.fillText('OPEN DAILY 07:00 - 22:00', h.cx, y);
+    y += h.lineHeight * 0.9;
+    ctx.font = bodyFont(h, h.sizeBody);
+    ctx.fillText(h.dividerLine, h.cx, y);
+    return y + h.lineHeight;
+  },
+
+  // Dot-matrix letterhead: company left, boxed document type right
+  invoice(ctx, h) {
+    const pad = Math.round(5 * h.scale);
+    const label = 'INVOICE';
+    ctx.font = titleFont(h, h.sizeTitle);
+    const labelW = Math.round(ctx.measureText(label).width + pad * 3);
+    const boxH = Math.round(h.sizeTitle * 1.6);
+    const top = Math.round(h.y - h.sizeTitle - pad);
+
+    ctx.lineWidth = Math.max(1, Math.round(1.5 * h.scale));
+    ctx.strokeStyle = h.ink;
+    ctx.strokeRect(h.margin + h.innerW - labelW, top, labelW, boxH);
+    ctx.textAlign = 'center';
+    ctx.fillText(label, h.margin + h.innerW - labelW / 2, top + boxH / 2 + h.sizeTitle * 0.35);
+
+    const title = h.title.toUpperCase();
+    ctx.textAlign = 'left';
+    ctx.font = titleFont(h, fitFont(ctx, h, title, h.sizeTitle, h.innerW - labelW - pad * 2));
+    ctx.fillText(title, h.margin, top + boxH / 2 + h.sizeTitle * 0.35);
+
+    let y = top + boxH + h.lineHeight;
+    ctx.font = bodyFont(h, h.sizeSub);
+    ctx.fillText(h.sub.toUpperCase(), h.margin, y);
+    y += h.lineHeight * 0.9;
+    ctx.fillText('JL. KERTAS THERMAL NO. 58', h.margin, y);
+    y += h.lineHeight;
+    ctx.textAlign = 'center';
+    ctx.font = bodyFont(h, h.sizeBody);
+    ctx.fillText(h.dividerLine, h.cx, y);
+    return y + h.lineHeight;
+  },
+
+  // Cinema chain name in a ruled band
+  cinema(ctx, h) {
+    let y = h.y;
+    ctx.textAlign = 'center';
+    const title = spaced(h.title.toUpperCase());
+    ctx.font = titleFont(h, fitFont(ctx, h, title, h.sizeTitle, h.innerW));
+    ctx.fillText(title, h.cx, y);
+    const ruleH = Math.max(1, Math.round(2 * h.scale));
+    ctx.fillRect(h.margin, Math.round(y - h.sizeTitle - 4 * h.scale), h.innerW, ruleH);
+    ctx.fillRect(h.margin, Math.round(y + 6 * h.scale), h.innerW, ruleH);
+    y += h.lineHeight * 1.2;
+
+    ctx.font = bodyFont(h, h.sizeSub);
+    ctx.fillText(h.sub.toUpperCase(), h.cx, y);
+    y += h.lineHeight * 0.9;
+    ctx.font = bodyFont(h, h.sizeBody);
+    ctx.fillText(h.dividerLine, h.cx, y);
+    return y + h.lineHeight;
   }
 };
