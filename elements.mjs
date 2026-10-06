@@ -21,6 +21,7 @@ export const elements = {
   dropoutsInput: document.getElementById('dropoutsInput'),
   dropoutsVal: document.getElementById('dropoutsVal'),
   tearInput: document.getElementById('tearInput'),
+  fadeInput: document.getElementById('fadeInput'),
   resetBtn: document.getElementById('resetBtn'),
   reshuffleBtn: document.getElementById('reshuffleBtn'),
   downloadBtn: document.getElementById('downloadBtn'),

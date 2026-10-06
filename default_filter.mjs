@@ -1,7 +1,7 @@
 
 export const DEFAULTS = {
   width: '450', contrast: '1.8', brightness: '1.0', dither: 'bayer8',
-  palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true,
+  palette: 'cream', transparency: 'none', dropouts: '0.012', tear: true, fade: false,
   aspect: 'native', transparentBg: false, imagePos: 'top', watermarkFit: 'width', layout: 'album'
 };
 

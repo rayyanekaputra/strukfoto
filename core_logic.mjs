@@ -3,6 +3,7 @@ import { elements } from './elements.mjs';
 import { barcodeBlockHeight, drawBarcode } from './barcodes.mjs';
 import { HEADERS } from './headers.mjs';
 import { ensureFonts, fontString } from './fonts.mjs';
+import { drawStamps, drawThermalFade, makePrintFx } from './print_fx.mjs';
 import { applyPaperShape, drawPerforation, shapeInset, shapeSideInset } from './shapes.mjs';
 import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 
@@ -157,6 +158,7 @@ function render() {
   const transparencyMode = elements.transparencyInput.value;
   const dropoutDensity = parseFloat(elements.dropoutsInput.value);
   const showTear = elements.tearInput.checked;
+  const showFade = elements.fadeInput.checked;
   const aspect = elements.aspectInput.value;
   const transparentCardBg = elements.transparentBgInput.checked;
   const imagePos = elements.imagePosInput.value;
@@ -262,6 +264,7 @@ function render() {
 
   const inkColor = transparencyMode === 'ink' ? '#00000000' : palette.inkHex;
   let perfY = 0;
+  let stamps = [];
   let paperHeight = 0;
 
   // Draws the whole receipt and returns the y just below the footer.
@@ -269,6 +272,7 @@ function render() {
   const paintReceipt = (pCtx, measuring) => {
     const rng = makeRng(rngSeed);
     perfY = 0;
+    stamps = [];
     pCtx.textBaseline = 'alphabetic';
     pCtx.fillStyle = inkColor;
 
@@ -316,7 +320,13 @@ function render() {
     pCtx.textAlign = 'left';
     curY += lineHeight;
 
+    const fx = makePrintFx({
+      ctx: pCtx, margin, innerW: usablePhotoWidth, lineHeight, scale, fonts,
+      ink: inkColor, paper: palette.paperHex, solid: transparencyMode !== 'ink', rng, stamps
+    });
+
     curY = layoutModule.drawContent(pCtx, {
+      fx,
       printWidth,
       margin,
       curY,
@@ -391,9 +401,17 @@ function render() {
     }
   });
 
+  if (showFade && transparencyMode !== 'paper') {
+    drawThermalFade(pCtx, printWidth, paperHeight, palette.paperHex);
+  }
+
   if (showTear) {
     applyPaperShape(pCtx, layoutModule.style?.shape, printWidth, paperHeight, scale, perfY);
   }
+
+  drawStamps(pCtx, stamps, {
+    scale, fonts, paper: transparencyMode === 'paper' ? null : palette.paperHex
+  });
 
   if (aspect === 'native') {
     elements.canvas.width = printWidth;
@@ -444,7 +462,8 @@ function toggleUIVisibility() {
     document.querySelector('.text-inputs-block'),
     elements.transparencyInput?.closest('.grid-row'),
     elements.dropoutsInput?.closest('.sliders-block'),
-    elements.tearInput?.closest('.grid-row')
+    elements.tearInput?.closest('.grid-row'),
+    elements.fadeInput?.closest('.grid-row')
   ];
 
   receiptOnlyElements.forEach(el => {
@@ -499,6 +518,7 @@ elements.resetBtn.addEventListener('click', () => {
   elements.transparencyInput.value = DEFAULTS.transparency;
   elements.dropoutsInput.value = DEFAULTS.dropouts;
   elements.tearInput.checked = DEFAULTS.tear;
+  elements.fadeInput.checked = DEFAULTS.fade;
   elements.aspectInput.value = DEFAULTS.aspect;
   elements.transparentBgInput.checked = DEFAULTS.transparentBg;
   elements.imagePosInput.value = DEFAULTS.imagePos;
@@ -541,7 +561,7 @@ elements.imageInput.addEventListener('change', (e) => {
 [
   elements.widthInput, elements.contrastInput, elements.brightnessInput,
   elements.ditherInput, elements.ditherScaleInput, elements.paletteInput,
-  elements.transparencyInput, elements.dropoutsInput, elements.tearInput,
+  elements.transparencyInput, elements.dropoutsInput, elements.tearInput, elements.fadeInput,
   elements.aspectInput, elements.transparentBgInput, elements.watermarkFitInput,
   elements.headerTitle, elements.headerSub, ...elements.trackInputs
 ].forEach(input => {
