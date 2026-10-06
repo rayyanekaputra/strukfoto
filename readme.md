@@ -12,7 +12,37 @@ vibecoded with gemini 3.6
 2. **bayer dithering**: compares pixel luminance against a threshold matrix (`4x4` or `8x8`) to simulate 1-bit thermal print dots.
 3. **color remapping**: maps binary pixels to paper and ink tones instead of harsh digital black and white.
 4. **printhead dropouts**: randomly erases horizontal pixel rows to simulate dead thermal printer pins.
-5. **serrated paper tear**: clips top and bottom canvas boundaries with a sine wave mask.
+5. **paper shape**: cuts the paper outline per receipt type (zigzag, ticket notches, tractor holes, torn edge, tag, and more).
+
+---
+
+## web app
+
+runs fully in the browser. serve the folder statically (e.g. `bunx serve`) and open it. photos never leave your device.
+
+### receipt types
+
+each type has its own paper shape, fonts, barcode and print details:
+
+* album / tracklist, supermarket / grocery, airline boarding pass, parking ticket, concert / event stub, atm / bank slip
+* coffee shop order: inverted order number bar, drink modifiers, double-height total, qr code
+* dot matrix invoice: tractor feed holes, green-bar rows, red `PAID` stamp
+* cinema ticket: die-cut corners, big movie title, tear-off `ADMIT ONE` stub
+* restaurant bill: torn edges, tip and signature lines
+* laundry claim tag: punched tag, huge claim number, blue `RECEIVED` stamp
+* carnival admit one: notched roll ticket with serial number
+* library checkout slip: due list and a stamped `DATE DUE` card
+
+receipt fonts (space mono, dotgothic16, oswald, courier prime, ibm plex mono, vt323) load from google fonts. offline, it falls back to courier new.
+
+### paper colors
+
+classic cream, aged yellow, blue thermal, stark b&w, pink carbon copy, canary yellow, green-bar dot matrix, kraft paper, faded thermal, ticket red. receipts print in a single ink; only rubber stamps use red or blue stamp ink.
+
+### extra options
+
+* **pinggir kertas bergerigi?**: turns the paper shape on or off
+* **efek pudar thermal?**: fades the ink toward the bottom, like an old thermal receipt
 
 ---
 

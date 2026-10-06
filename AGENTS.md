@@ -7,7 +7,7 @@ Guidance for AI coding agents working on **strukfoto**: a browser tool that turn
 - **Everything runs client-side in the browser.** No server, no uploads, no analytics, no network calls that carry user images. Photos must never leave the device. Do not add a backend, API route, or any dependency that requires one.
 - **Phones are first-class users.** Assume a mid-range phone with limited memory, a small viewport, touch input, and a slow CPU. Every change must stay responsive there.
 - **No build step.** The app is plain HTML plus native ES modules, served as static files. Don't introduce a bundler, framework, or transpiler without asking first.
-- Prefer zero runtime dependencies. The only external resource today is the Manrope font from Google Fonts. Don't add CDN scripts.
+- Prefer zero runtime dependencies. The only external resource today is Google Fonts: Manrope for the UI, plus the receipt fonts listed in `fonts.mjs` (one combined `<link>` in `index.html`). Don't add CDN scripts.
 
 ## Project layout
 
@@ -18,6 +18,11 @@ Guidance for AI coding agents working on **strukfoto**: a browser tool that turn
 | `elements.mjs` | Central DOM lookups (`elements` object). Add new control IDs here |
 | `default_filter.mjs` | `DEFAULTS`, `PALETTES`, `BAYER_4X4`, `BAYER_8X8` |
 | `receipt_layout.js` | `RECEIPT_LAYOUTS`: text templates for the receipt header and footer |
+| `headers.mjs` | Header styles per receipt type (`HEADERS`) |
+| `shapes.mjs` | Paper outlines cut per receipt type, plus top/side insets |
+| `fonts.mjs` | Receipt font table and on-demand font loading |
+| `print_fx.mjs` | Printer effects for layouts: big text, inverted bars, green-bar rows, rubber stamps, thermal fade |
+| `barcodes.mjs` | Barcode and QR drawing |
 | `pocs/` | Old proofs of concept (Python, Bun). **Ignore this directory entirely.** Not part of the web app. |
 | `favicon_io/` | Icons and web manifest |
 
