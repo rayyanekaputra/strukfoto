@@ -1,5 +1,6 @@
 import { RECEIPT_LAYOUTS } from './receipt_layout.js';
 import { elements } from './elements.mjs';
+import { applyPaperShape, drawPerforation } from './shapes.mjs';
 import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 
 let loadedImage = null;
@@ -277,6 +278,7 @@ function render() {
     pCtx.restore();
   }
 
+  let perfY = 0;
   let curY = Math.round(25 * scale);
   const inkColor = transparencyMode === 'ink' ? '#00000000' : palette.inkHex;
   pCtx.fillStyle = inkColor;
@@ -314,7 +316,8 @@ function render() {
       }
       return atY;
     },
-    imagePos
+    imagePos,
+    markPerforation: (y) => { perfY = y; }
   });
 
   drawBarcode(pCtx, curY, printWidth, margin, barcodeHeight, inkColor, rng);
@@ -333,6 +336,8 @@ function render() {
     lastHeight = paperHeight;
   }
 
+  if (perfY) drawPerforation(pCtx, printWidth, perfY, scale, inkColor);
+
   cachedDeadRows.forEach((rowY) => {
     if (transparencyMode === 'paper') {
       pCtx.clearRect(0, rowY, printWidth, 1);
@@ -343,19 +348,7 @@ function render() {
   });
 
   if (showTear) {
-    pCtx.save();
-    pCtx.globalCompositeOperation = 'destination-out';
-    pCtx.fillStyle = '#000000';
-
-    const toothSize = 12;
-    const toothDepth = 6;
-
-    for (let x = 0; x < printWidth; x++) {
-      const toothY = Math.floor(Math.abs(Math.sin((x / toothSize) * Math.PI)) * toothDepth);
-      pCtx.fillRect(x, 0, 1, toothY);
-      pCtx.fillRect(x, paperHeight - toothDepth + toothY, 1, toothDepth);
-    }
-    pCtx.restore();
+    applyPaperShape(pCtx, layoutModule.style?.shape, printWidth, paperHeight, scale, perfY);
   }
 
   if (aspect === 'native') {

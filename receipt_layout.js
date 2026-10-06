@@ -10,6 +10,7 @@ function row(left, right, maxChars, fillChar = ' ') {
 
 export const RECEIPT_LAYOUTS = {
   album: {
+    style: { shape: 'strip' },
     name: 'album receipt',
     fields: {
       footerMsg: 'THANK YOU FOR LISTENING',
@@ -55,6 +56,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   grocery: {
+    style: { shape: 'strip' },
     name: 'grocery / market',
     fields: {
       footerMsg: '*** YOU SAVED $4.20 TODAY! ***',
@@ -108,6 +110,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   airline: {
+    style: { shape: 'stub' },
     name: 'airline boarding pass',
     fields: {
       footerMsg: 'HAVE A GOOD FLIGHT',
@@ -121,7 +124,7 @@ export const RECEIPT_LAYOUTS = {
       const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
       return Math.round(headerH + photoH + bodyH + footerH);
     },
-    drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
+    drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos, markPerforation }) => {
       let y = curY;
       if (imagePos === 'top') y = renderPhoto(y);
 
@@ -143,6 +146,7 @@ export const RECEIPT_LAYOUTS = {
 
       if (imagePos === 'middle') y = renderPhoto(y);
 
+      markPerforation(y - Math.round(lineHeight * 0.8));
       pCtx.fillText('- - - - TEAR OFF STUB - - - -', margin, y);
       y += lineHeight;
       pCtx.fillText(row('PASS:', items[0] || 'RAYYAN/EKA', maxChars), margin, y);
@@ -156,6 +160,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   parking: {
+    style: { shape: 'ticket' },
     name: 'parking ticket',
     fields: {
       footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *',
@@ -202,6 +207,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   concert: {
+    style: { shape: 'scallop' },
     name: 'concert stub',
     fields: {
       footerMsg: 'VOID IF DETACHED // NO REFUNDS',
@@ -244,6 +250,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   atm: {
+    style: { shape: 'rounded' },
     name: 'atm slip',
     fields: {
       footerMsg: 'RECORD COPY - RETAIN FOR FILES',
