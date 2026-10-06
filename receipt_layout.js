@@ -10,19 +10,12 @@ function row(left, right, maxChars, fillChar = ' ') {
 
 export const RECEIPT_LAYOUTS = {
   album: {
-    style: { shape: 'strip', barcode: 'code128', header: 'plain', divider: { major: '=', minor: '-' } },
+    style: { shape: 'strip', barcode: 'code128', header: 'album', divider: { major: '=', minor: '-' } },
     name: 'album receipt',
     fields: {
       footerMsg: 'THANK YOU FOR LISTENING',
       sectionTitle: 'tracklist items',
       placeholders: ['track 1 title', 'track 2 title', 'track 3 title', 'track 4 title', 'track 5 title']
-    },
-    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, items, barcodeHeight }) => {
-      const headerH = 25 * scale + lineHeight * 4;
-      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
-      const bodyH = lineHeight * (6 + items.filter(Boolean).length) + 22 * scale;
-      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
-      return Math.round(headerH + photoH + bodyH + footerH);
     },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
@@ -56,19 +49,12 @@ export const RECEIPT_LAYOUTS = {
   },
 
   grocery: {
-    style: { shape: 'strip', barcode: 'code128', header: 'plain', divider: { major: '*', minor: '-' } },
+    style: { shape: 'strip', barcode: 'code128', header: 'grocery', divider: { major: '*', minor: '-' } },
     name: 'grocery / market',
     fields: {
       footerMsg: '*** YOU SAVED $4.20 TODAY! ***',
       sectionTitle: 'grocery items',
       placeholders: ['item 1 (e.g. iced coffee)', 'item 2 (e.g. fresh milk)', 'item 3 (e.g. bakery)', 'item 4', 'item 5']
-    },
-    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, items, barcodeHeight }) => {
-      const headerH = 25 * scale + lineHeight * 4;
-      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
-      const bodyH = lineHeight * (9 + items.filter(Boolean).length) + 22 * scale;
-      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
-      return Math.round(headerH + photoH + bodyH + footerH);
     },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
@@ -110,19 +96,12 @@ export const RECEIPT_LAYOUTS = {
   },
 
   airline: {
-    style: { shape: 'stub', barcode: 'pdf417', header: 'band', divider: { major: '=', minor: '-' } },
+    style: { shape: 'stub', barcode: 'pdf417', header: 'airline', divider: { major: '=', minor: '-' } },
     name: 'airline boarding pass',
     fields: {
       footerMsg: 'HAVE A GOOD FLIGHT',
       sectionTitle: 'passenger & flight details',
       placeholders: ['passenger name (e.g. rayyan/eka)', 'additional note / class', 'special request', '', '']
-    },
-    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
-      const headerH = 25 * scale + lineHeight * 4;
-      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
-      const bodyH = lineHeight * 10 + 22 * scale;
-      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
-      return Math.round(headerH + photoH + bodyH + footerH);
     },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos, markPerforation }) => {
       let y = curY;
@@ -160,19 +139,12 @@ export const RECEIPT_LAYOUTS = {
   },
 
   parking: {
-    style: { shape: 'ticket', barcode: 'code39', header: 'box', divider: { major: '#', minor: '-' } },
+    style: { shape: 'ticket', barcode: 'code39', header: 'parking', divider: { major: '#', minor: '-' } },
     name: 'parking ticket',
     fields: {
       footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *',
       sectionTitle: 'vehicle & ticket details',
       placeholders: ['plate number (e.g. b 1234 xyz)', 'parking slot code', '', '', '']
-    },
-    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
-      const headerH = 25 * scale + lineHeight * 4;
-      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
-      const bodyH = lineHeight * 9 + 22 * scale;
-      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
-      return Math.round(headerH + photoH + bodyH + footerH);
     },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
@@ -207,19 +179,12 @@ export const RECEIPT_LAYOUTS = {
   },
 
   concert: {
-    style: { shape: 'scallop', barcode: 'qr', header: 'band', divider: { major: '~', minor: '.' } },
+    style: { shape: 'scallop', barcode: 'qr', header: 'concert', divider: { major: '~', minor: '.' } },
     name: 'concert stub',
     fields: {
       footerMsg: 'VOID IF DETACHED // NO REFUNDS',
       sectionTitle: 'pass holder & venue info',
       placeholders: ['ticket holder (e.g. vip guest)', 'gate / entry note', '', '', '']
-    },
-    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
-      const headerH = 25 * scale + lineHeight * 4;
-      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
-      const bodyH = lineHeight * 7 + 22 * scale;
-      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
-      return Math.round(headerH + photoH + bodyH + footerH);
     },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;
@@ -250,19 +215,12 @@ export const RECEIPT_LAYOUTS = {
   },
 
   atm: {
-    style: { shape: 'rounded', barcode: 'none', header: 'box', divider: { major: '-', minor: '.' } },
+    style: { shape: 'rounded', barcode: 'none', header: 'atm', divider: { major: '-', minor: '.' } },
     name: 'atm slip',
     fields: {
       footerMsg: 'RECORD COPY - RETAIN FOR FILES',
       sectionTitle: 'account & account holder',
       placeholders: ['account holder name', 'transaction note', '', '', '']
-    },
-    getHeight: ({ lineHeight, scale, photoHeight, isWatermark, barcodeHeight }) => {
-      const headerH = 25 * scale + lineHeight * 4;
-      const photoH = (!isWatermark && photoHeight) ? photoHeight + 15 * scale : 0;
-      const bodyH = lineHeight * 9 + 22 * scale;
-      const footerH = barcodeHeight + 15 * scale + lineHeight + 30 * scale;
-      return Math.round(headerH + photoH + bodyH + footerH);
     },
     drawContent: (pCtx, { margin, curY, lineHeight, scale, maxChars, subDividerLine, items, renderPhoto, imagePos }) => {
       let y = curY;

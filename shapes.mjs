@@ -30,9 +30,9 @@ function cutRoundedCorners(ctx, w, h, r) {
 
 const SHAPES = {
   // Zigzag top and bottom edge, like a torn receipt strip
-  strip: (ctx, w, h) => {
-    const toothSize = 12;
-    const toothDepth = 6;
+  strip: (ctx, w, h, scale) => {
+    const toothSize = Math.max(4, Math.round(12 * scale));
+    const toothDepth = Math.max(2, Math.round(6 * scale));
     for (let x = 0; x < w; x++) {
       const toothY = Math.floor(Math.abs(Math.sin((x / toothSize) * Math.PI)) * toothDepth);
       ctx.fillRect(x, 0, 1, toothY);
@@ -77,6 +77,19 @@ const SHAPES = {
     cutRoundedCorners(ctx, w, h, Math.round(22 * scale));
   }
 };
+
+// Vertical space at the top and bottom that content should stay clear of
+const INSETS = {
+  strip: (scale) => Math.max(2, Math.round(6 * scale)) + Math.round(8 * scale),
+  ticket: (scale) => Math.round(10 * scale),
+  stub: (scale) => Math.round(12 * scale),
+  scallop: (scale) => Math.max(3, Math.round(5 * scale)) + Math.round(10 * scale),
+  rounded: (scale) => Math.round(16 * scale)
+};
+
+export function shapeInset(shape, scale) {
+  return (INSETS[shape] || INSETS.strip)(scale);
+}
 
 export function applyPaperShape(ctx, shape, w, h, scale, perfY) {
   const cut = SHAPES[shape] || SHAPES.strip;

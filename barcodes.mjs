@@ -1,17 +1,26 @@
 // Barcode styles. These look like real codes but encode nothing.
+// Every code is laid out in modules and sized from the block width alone, so the
+// aspect ratio is the same at any export resolution.
 
-const HEIGHT_FACTOR = { code128: 1, code39: 1, pdf417: 1.6, qr: 2.4, none: 0 };
 const LABELED = new Set(['code128', 'code39', 'pdf417']);
+
+// Block geometry as a fraction of the block width
+const SPEC = {
+  code128: { fill: 0.92, height: 0.11 },
+  code39: { fill: 0.92, height: 0.11 },
+  pdf417: { fill: 0.92, height: 0.17 },
+  qr: { fill: 0, height: 0.36 }
+};
 
 function labelHeight(style, scale) {
   return LABELED.has(style) ? Math.round(14 * scale) : 0;
 }
 
-// Total height the barcode block needs, including the number line
-export function barcodeBlockHeight(style, baseHeight, scale) {
-  const factor = HEIGHT_FACTOR[style] ?? 1;
-  if (!factor) return 0;
-  return Math.round(baseHeight * factor + labelHeight(style, scale));
+// Total height the barcode block needs for a block of width `w`, including the number line
+export function barcodeBlockHeight(style, w, scale) {
+  const spec = SPEC[style];
+  if (!spec) return 0;
+  return Math.round(w * spec.height + labelHeight(style, scale));
 }
 
 // Split `total` modules into `count` widths between 1 and `max`
@@ -28,33 +37,37 @@ function randomWidths(rng, count, total, max) {
   return widths;
 }
 
-// Draw alternating bar/space widths starting with a bar. Returns the x after the last element.
-function drawElements(ctx, widths, x, y, unit, h) {
+// Draw alternating bar/space widths starting with a bar. Positions are in modules from x0;
+// edges are rounded to whole pixels so bars stay crisp. Returns the module offset after the last element.
+function drawElements(ctx, widths, x0, offset, y, unit, h) {
   widths.forEach((w, i) => {
-    if (i % 2 === 0) ctx.fillRect(x, y, w * unit, h);
-    x += w * unit;
+    if (i % 2 === 0) {
+      const left = Math.round(x0 + offset * unit);
+      const right = Math.round(x0 + (offset + w) * unit);
+      ctx.fillRect(left, y, Math.max(1, right - left), h);
+    }
+    offset += w;
   });
-  return x;
+  return offset;
 }
 
-function drawCode128(ctx, { x, y, w, h, rng, scale }) {
-  const unit = Math.max(1, Math.round(1.6 * scale));
-  const symbols = Math.max(1, Math.floor((w / unit - 44) / 11));
-  const start = [2, 1, 1, 2, 1, 4];
-  const stop = [2, 3, 3, 1, 1, 1, 2];
-  const totalW = (44 + 11 * symbols) * unit;
-  let cx = x + Math.floor((w - totalW) / 2) + 10 * unit;
-  cx = drawElements(ctx, start, cx, y, unit, h);
+function drawCode128(ctx, { x, y, w, h, rng }) {
+  const symbols = 18;
+  const total = 35 + 11 * symbols + 2;
+  const unit = (w * SPEC.code128.fill) / total;
+  const x0 = x + (w - total * unit) / 2;
+  let o = drawElements(ctx, [2, 1, 1, 2, 1, 4], x0, 0, y, unit, h);
   for (let i = 0; i < symbols; i++) {
-    cx = drawElements(ctx, randomWidths(rng, 6, 11, 4), cx, y, unit, h);
+    o = drawElements(ctx, randomWidths(rng, 6, 11, 4), x0, o, y, unit, h);
   }
-  drawElements(ctx, stop, cx, y, unit, h);
+  drawElements(ctx, [2, 3, 3, 1, 1, 1, 2], x0, o, y, unit, h);
 }
 
-function drawCode39(ctx, { x, y, w, h, rng, scale }) {
-  const unit = Math.max(1, Math.round(1.4 * scale));
-  const chars = Math.max(1, Math.floor(w / unit / 16));
-  let cx = x + Math.floor((w - chars * 16 * unit) / 2);
+function drawCode39(ctx, { x, y, w, h, rng }) {
+  const chars = 14;
+  const unit = (w * SPEC.code39.fill) / (chars * 16);
+  const x0 = x + (w - chars * 16 * unit) / 2;
+  let o = 0;
   for (let i = 0; i < chars; i++) {
     // 5 bars and 4 spaces; 2 wide bars and 1 wide space per character
     const bars = [1, 1, 1, 1, 1];
@@ -73,33 +86,43 @@ function drawCode39(ctx, { x, y, w, h, rng, scale }) {
       if (k < 4) widths.push(spaces[k]);
     }
     widths.push(1); // gap between characters
-    cx = drawElements(ctx, widths, cx, y, unit, h);
+    o = drawElements(ctx, widths, x0, o, y, unit, h);
   }
 }
 
-function drawPdf417(ctx, { x, y, w, h, rng, scale }) {
-  const unit = Math.max(1, Math.round(1.2 * scale));
+function drawPdf417(ctx, { x, y, w, h, rng }) {
   const rows = 5;
-  const rowH = Math.floor(h / rows);
+  const words = 6;
   const start = [8, 1, 1, 1, 1, 1, 1, 3];
   const stop = [7, 1, 1, 3, 1, 1, 1, 2, 1];
-  const words = Math.max(1, Math.floor((w / unit - 35) / 17));
-  const totalW = (35 + 17 * words) * unit;
-  const x0 = x + Math.floor((w - totalW) / 2);
+  const total = 17 + 17 * words + 18;
+  const unit = (w * SPEC.pdf417.fill) / total;
+  const x0 = x + (w - total * unit) / 2;
+  const rowH = Math.floor(h / rows);
   for (let r = 0; r < rows; r++) {
-    let cx = drawElements(ctx, start, x0, y + r * rowH, unit, rowH);
+    const ry = y + r * rowH;
+    let o = drawElements(ctx, start, x0, 0, ry, unit, rowH);
     for (let i = 0; i < words; i++) {
-      cx = drawElements(ctx, randomWidths(rng, 8, 17, 6), cx, y + r * rowH, unit, rowH);
+      o = drawElements(ctx, randomWidths(rng, 8, 17, 6), x0, o, ry, unit, rowH);
     }
-    drawElements(ctx, stop, cx, y + r * rowH, unit, rowH);
+    drawElements(ctx, stop, x0, o, ry, unit, rowH);
   }
 }
 
 function drawQr(ctx, { x, y, w, h, rng }) {
   const n = 21;
-  const m = Math.max(1, Math.floor(h / n));
-  const x0 = x + Math.floor((w - n * m) / 2);
+  const m = Math.min(h, w) / n;
+  const x0 = x + (w - n * m) / 2;
   const finders = [[0, 0], [n - 7, 0], [0, n - 7]];
+
+  // Rectangle in cell units, snapped to whole pixels
+  const cells = (fn, cx, cy, cw, ch) => {
+    const l = Math.round(x0 + cx * m);
+    const t = Math.round(y + cy * m);
+    const r = Math.round(x0 + (cx + cw) * m);
+    const b = Math.round(y + (cy + ch) * m);
+    fn.call(ctx, l, t, Math.max(1, r - l), Math.max(1, b - t));
+  };
 
   const inFinderZone = (cx, cy) => finders.some(([fx, fy]) => cx >= fx - 1 && cx <= fx + 7 && cy >= fy - 1 && cy <= fy + 7);
 
@@ -108,14 +131,14 @@ function drawQr(ctx, { x, y, w, h, rng }) {
       if (inFinderZone(cx, cy)) continue;
       const timing = cx === 6 || cy === 6;
       const on = timing ? (cx + cy) % 2 === 0 : rng() < 0.5;
-      if (on) ctx.fillRect(x0 + cx * m, y + cy * m, m, m);
+      if (on) cells(ctx.fillRect, cx, cy, 1, 1);
     }
   }
 
   finders.forEach(([fx, fy]) => {
-    ctx.fillRect(x0 + fx * m, y + fy * m, 7 * m, 7 * m);
-    ctx.clearRect(x0 + (fx + 1) * m, y + (fy + 1) * m, 5 * m, 5 * m);
-    ctx.fillRect(x0 + (fx + 2) * m, y + (fy + 2) * m, 3 * m, 3 * m);
+    cells(ctx.fillRect, fx, fy, 7, 7);
+    cells(ctx.clearRect, fx + 1, fy + 1, 5, 5);
+    cells(ctx.fillRect, fx + 2, fy + 2, 3, 3);
   });
 }
 
@@ -129,7 +152,7 @@ export function drawBarcode(ctx, style, { x, y, w, h, rng, scale, ink }) {
   const labelH = labelHeight(style, scale);
   ctx.save();
   ctx.fillStyle = ink;
-  draw(ctx, { x, y, w, h: h - labelH, rng, scale });
+  draw(ctx, { x, y, w, h: h - labelH, rng });
 
   if (labelH) {
     const digit = () => Math.floor(rng() * 10);

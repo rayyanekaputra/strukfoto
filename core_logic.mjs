@@ -1,7 +1,8 @@
 import { RECEIPT_LAYOUTS } from './receipt_layout.js';
 import { elements } from './elements.mjs';
 import { barcodeBlockHeight, drawBarcode } from './barcodes.mjs';
-import { applyPaperShape, drawPerforation } from './shapes.mjs';
+import { HEADERS } from './headers.mjs';
+import { applyPaperShape, drawPerforation, shapeInset } from './shapes.mjs';
 import { DEFAULTS, BAYER_4X4, BAYER_8X8, PALETTES } from './default_filter.mjs';
 
 let loadedImage = null;
@@ -12,6 +13,9 @@ let rngSeed = (Math.random() * 0xffffffff) >>> 0;
 let photoCache = { key: '', canvas: null };
 
 const ctx = elements.canvas.getContext('2d');
+// Reused across renders: a scratch context for measuring and the paper being drawn
+const measureCtx = document.createElement('canvas').getContext('2d');
+const paperCanvas = document.createElement('canvas');
 
 
 function updateLabels() {
@@ -156,49 +160,26 @@ function render() {
   const transparentCardBg = elements.transparentBgInput.checked;
   const imagePos = elements.imagePosInput.value;
 
-  const rng = makeRng(rngSeed);
   const scale = printWidth / 450.0;
   const margin = Math.round(20 * scale);
-  const fontSizeTitle = Math.max(12, Math.round(20 * scale));
-  const fontSizeSub = Math.max(9, Math.round(12 * scale));
-  const fontSizeBody = Math.max(10, Math.round(13 * scale));
+  const fontSizeTitle = Math.max(8, Math.round(20 * scale));
+  const fontSizeSub = Math.max(6, Math.round(12 * scale));
+  const fontSizeBody = Math.max(6, Math.round(13 * scale));
   const lineHeight = Math.round(18 * scale);
 
   const selectedLayoutKey = elements.layoutSelect ? elements.layoutSelect.value : 'album';
   const layoutModule = RECEIPT_LAYOUTS[selectedLayoutKey] || RECEIPT_LAYOUTS.album;
   const style = layoutModule.style || {};
-  const barcodeHeight = barcodeBlockHeight(style.barcode, Math.round(35 * scale), scale);
-
-  const charWidth = fontSizeBody * 0.6;
-  const maxChars = Math.max(18, Math.floor((printWidth - margin * 2) / charWidth));
-  const dividerLine = (style.divider?.major || '=').repeat(maxChars);
-  const subDividerLine = (style.divider?.minor || '-').repeat(maxChars);
 
   const usablePhotoWidth = printWidth - margin * 2;
+  const barcodeHeight = barcodeBlockHeight(style.barcode, usablePhotoWidth, scale);
   const photoHeight = loadedImage ? Math.round((loadedImage.height / loadedImage.width) * usablePhotoWidth) : 0;
   const isWatermark = imagePos === 'background';
 
   const itemStrings = Array.from(elements.trackInputs).map(input => input.value.trim());
 
-  // Dynamic paper height calculation
-  const paperHeight = layoutModule.getHeight ? layoutModule.getHeight({
-    lineHeight, scale, photoHeight: loadedImage ? photoHeight : 0, isWatermark, items: itemStrings, barcodeHeight
-  }) : Math.round(lineHeight * 20 + barcodeHeight + (loadedImage ? photoHeight : 0));
-
-  const paperCanvas = document.createElement('canvas');
-  paperCanvas.width = printWidth;
-  paperCanvas.height = paperHeight;
-  const pCtx = paperCanvas.getContext('2d');
-
-
-
-  if (transparencyMode !== 'paper') {
-    pCtx.fillStyle = palette.paperHex;
-    pCtx.fillRect(0, 0, printWidth, paperHeight);
-  }
-
   let ditheredPhotoCanvas = null;
-  if (loadedImage) {
+  if (loadedImage && !isPhotoOnly) {
     ditheredPhotoCanvas = getDitheredPhoto(
       usablePhotoWidth, photoHeight, brightness,
       contrast, ditherMode, palette, ditherScale, colorMode
@@ -260,75 +241,111 @@ function render() {
     return; // Stop execution before receipt rendering
   }
 
-  // Render Translucent Background Watermark
-  if (ditheredPhotoCanvas && isWatermark) {
-    pCtx.save();
-    pCtx.globalAlpha = 0.25;
-    const watermarkY = Math.max(margin, Math.round((paperHeight - photoHeight) / 2));
-    pCtx.drawImage(ditheredPhotoCanvas, margin, watermarkY);
-    pCtx.restore();
-  }
 
-  let perfY = 0;
-  let curY = Math.round(25 * scale);
+  // Spacing: the paper shape reserves its own inset at the top and bottom
+  const inset = shapeInset(style.shape, scale);
+  const padTop = inset + Math.round(14 * scale);
+  const padBottom = inset + Math.round(18 * scale);
+
+  measureCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+  const charWidth = measureCtx.measureText('M').width || fontSizeBody * 0.6;
+  const maxChars = Math.max(18, Math.floor(usablePhotoWidth / charWidth));
+  const dividerLine = (style.divider?.major || '=').repeat(maxChars);
+  const subDividerLine = (style.divider?.minor || '-').repeat(maxChars);
+
   const inkColor = transparencyMode === 'ink' ? '#00000000' : palette.inkHex;
-  pCtx.fillStyle = inkColor;
-  pCtx.textAlign = 'center';
+  let perfY = 0;
+  let paperHeight = 0;
 
-  // Ink-transparent mode would hide a band or box, so fall back to plain
-  const headerStyle = transparencyMode === 'ink' ? 'plain' : (style.header || 'plain');
-  if (headerStyle === 'band') {
-    pCtx.fillRect(margin, curY - fontSizeTitle, usablePhotoWidth, fontSizeTitle + Math.round(lineHeight * 0.4));
+  // Draws the whole receipt and returns the y just below the footer.
+  // The first pass only measures, so the paper height always matches the content.
+  const paintReceipt = (pCtx, measuring) => {
+    const rng = makeRng(rngSeed);
+    perfY = 0;
+    pCtx.textBaseline = 'alphabetic';
+    pCtx.fillStyle = inkColor;
+
+    if (!measuring && ditheredPhotoCanvas && isWatermark) {
+      pCtx.save();
+      pCtx.globalAlpha = 0.25;
+      const watermarkY = Math.max(margin, Math.round((paperHeight - photoHeight) / 2));
+      pCtx.drawImage(ditheredPhotoCanvas, margin, watermarkY);
+      pCtx.restore();
+    }
+
+    let curY = padTop + fontSizeTitle;
+    const header = HEADERS[style.header] || HEADERS.album;
+    curY = Math.round(header(pCtx, {
+      y: curY,
+      cx: printWidth / 2,
+      margin,
+      innerW: usablePhotoWidth,
+      scale,
+      lineHeight,
+      sizeTitle: fontSizeTitle,
+      sizeSub: fontSizeSub,
+      sizeBody: fontSizeBody,
+      title: elements.headerTitle.value,
+      sub: elements.headerSub.value,
+      maxChars,
+      dividerLine,
+      ink: inkColor,
+      paper: palette.paperHex,
+      // Ink-transparent mode would hide filled shapes, so headers fall back to plain text
+      solid: transparencyMode !== 'ink'
+    }));
+
+    pCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+    pCtx.fillStyle = inkColor;
+    pCtx.textAlign = 'left';
+    pCtx.fillText('DATE: 2026-09-06', margin, curY);
+    pCtx.textAlign = 'right';
+    pCtx.fillText(`REC #: ${Math.floor(1000 + rng() * 9000)}`, margin + usablePhotoWidth, curY);
+    pCtx.textAlign = 'left';
+    curY += lineHeight;
+
+    curY = layoutModule.drawContent(pCtx, {
+      printWidth,
+      margin,
+      curY,
+      lineHeight,
+      scale,
+      maxChars,
+      subDividerLine,
+      items: itemStrings,
+      renderPhoto: (atY) => {
+        if (ditheredPhotoCanvas && !isWatermark) {
+          if (!measuring) pCtx.drawImage(ditheredPhotoCanvas, margin, atY);
+          return atY + photoHeight + Math.round(15 * scale);
+        }
+        return atY;
+      },
+      imagePos,
+      markPerforation: (y) => { perfY = y; }
+    });
+
+    drawBarcode(pCtx, style.barcode, { x: margin, y: curY, w: usablePhotoWidth, h: barcodeHeight, rng, scale, ink: inkColor });
+    if (barcodeHeight) curY += barcodeHeight + Math.round(15 * scale);
+    pCtx.font = `${fontSizeBody}px "Courier New", monospace`;
+    pCtx.textAlign = 'center';
+    pCtx.fillText(layoutModule.fields?.footerMsg || 'THANK YOU FOR LISTENING', printWidth / 2, curY);
+    return curY;
+  };
+
+  const footerY = paintReceipt(measureCtx, true);
+  paperHeight = Math.round(footerY + Math.round(fontSizeBody * 0.3) + padBottom);
+
+  paperCanvas.width = printWidth;
+  paperCanvas.height = paperHeight;
+  const pCtx = paperCanvas.getContext('2d');
+
+  if (transparencyMode !== 'paper') {
     pCtx.fillStyle = palette.paperHex;
-  } else if (headerStyle === 'box') {
-    pCtx.strokeStyle = inkColor;
-    pCtx.lineWidth = Math.max(1, Math.round(2 * scale));
-    const boxTop = curY - fontSizeTitle - Math.round(2 * scale);
-    pCtx.strokeRect(margin, boxTop, usablePhotoWidth, curY + lineHeight + Math.round(5 * scale) - boxTop);
+    pCtx.fillRect(0, 0, printWidth, paperHeight);
   }
 
-  pCtx.font = `bold ${fontSizeTitle}px "Courier New", monospace`;
-  pCtx.fillText(elements.headerTitle.value.toUpperCase(), printWidth / 2, curY);
-  pCtx.fillStyle = inkColor;
-  curY += lineHeight;
+  paintReceipt(pCtx, false);
 
-  pCtx.font = `${fontSizeSub}px "Courier New", monospace`;
-  pCtx.fillText(`[ ${elements.headerSub.value.toUpperCase()} ]`, printWidth / 2, curY);
-  curY += lineHeight;
-
-  pCtx.font = `${fontSizeBody}px "Courier New", monospace`;
-  pCtx.fillText(dividerLine, printWidth / 2, curY);
-  curY += lineHeight;
-
-  pCtx.textAlign = 'left';
-  pCtx.fillText(`DATE: 2026-09-06      REC #: ${Math.floor(1000 + rng() * 9000)}`, margin, curY);
-  curY += lineHeight;
-
-  curY = layoutModule.drawContent(pCtx, {
-    printWidth,
-    margin,
-    curY,
-    lineHeight,
-    scale,
-    maxChars,
-    subDividerLine,
-    items: itemStrings,
-    renderPhoto: (atY) => {
-      if (ditheredPhotoCanvas && !isWatermark) {
-        pCtx.drawImage(ditheredPhotoCanvas, margin, atY);
-        return atY + photoHeight + Math.round(15 * scale);
-      }
-      return atY;
-    },
-    imagePos,
-    markPerforation: (y) => { perfY = y; }
-  });
-
-  drawBarcode(pCtx, style.barcode, { x: margin, y: curY, w: usablePhotoWidth, h: barcodeHeight, rng, scale, ink: inkColor });
-  curY += barcodeHeight + Math.round(15 * scale);
-  pCtx.textAlign = 'center';
-  const footerMsg = layoutModule.fields?.footerMsg || 'THANK YOU FOR LISTENING';
-  pCtx.fillText(footerMsg, printWidth / 2, curY);
 
   const numDropouts = Math.floor(paperHeight * dropoutDensity);
   if (lastHeight !== paperHeight || cachedDeadRows.length !== numDropouts) {
