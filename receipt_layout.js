@@ -10,7 +10,7 @@ function row(left, right, maxChars, fillChar = ' ') {
 
 export const RECEIPT_LAYOUTS = {
   album: {
-    style: { shape: 'strip' },
+    style: { shape: 'strip', barcode: 'code128', header: 'plain', divider: { major: '=', minor: '-' } },
     name: 'album receipt',
     fields: {
       footerMsg: 'THANK YOU FOR LISTENING',
@@ -56,7 +56,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   grocery: {
-    style: { shape: 'strip' },
+    style: { shape: 'strip', barcode: 'code128', header: 'plain', divider: { major: '*', minor: '-' } },
     name: 'grocery / market',
     fields: {
       footerMsg: '*** YOU SAVED $4.20 TODAY! ***',
@@ -110,7 +110,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   airline: {
-    style: { shape: 'stub' },
+    style: { shape: 'stub', barcode: 'pdf417', header: 'band', divider: { major: '=', minor: '-' } },
     name: 'airline boarding pass',
     fields: {
       footerMsg: 'HAVE A GOOD FLIGHT',
@@ -160,7 +160,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   parking: {
-    style: { shape: 'ticket' },
+    style: { shape: 'ticket', barcode: 'code39', header: 'box', divider: { major: '#', minor: '-' } },
     name: 'parking ticket',
     fields: {
       footerMsg: '* LOST TICKET SUBJECT TO MAX RATE *',
@@ -207,7 +207,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   concert: {
-    style: { shape: 'scallop' },
+    style: { shape: 'scallop', barcode: 'qr', header: 'band', divider: { major: '~', minor: '.' } },
     name: 'concert stub',
     fields: {
       footerMsg: 'VOID IF DETACHED // NO REFUNDS',
@@ -250,7 +250,7 @@ export const RECEIPT_LAYOUTS = {
   },
 
   atm: {
-    style: { shape: 'rounded' },
+    style: { shape: 'rounded', barcode: 'none', header: 'box', divider: { major: '-', minor: '.' } },
     name: 'atm slip',
     fields: {
       footerMsg: 'RECORD COPY - RETAIN FOR FILES',
