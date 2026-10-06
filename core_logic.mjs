@@ -179,7 +179,8 @@ function render() {
   const itemStrings = Array.from(elements.trackInputs).map(input => input.value.trim());
 
   let ditheredPhotoCanvas = null;
-  if (loadedImage && !isPhotoOnly) {
+  // The watermark is dithered after measuring, once the paper height is known
+  if (loadedImage && !isPhotoOnly && !isWatermark) {
     ditheredPhotoCanvas = getDitheredPhoto(
       usablePhotoWidth, photoHeight, brightness,
       contrast, ditherMode, palette, ditherScale, colorMode
@@ -266,10 +267,14 @@ function render() {
     pCtx.fillStyle = inkColor;
 
     if (!measuring && ditheredPhotoCanvas && isWatermark) {
+      // Edge to edge, centered; whichever side overflows gets cropped by the canvas
       pCtx.save();
       pCtx.globalAlpha = 0.25;
-      const watermarkY = Math.max(margin, Math.round((paperHeight - photoHeight) / 2));
-      pCtx.drawImage(ditheredPhotoCanvas, margin, watermarkY);
+      pCtx.drawImage(
+        ditheredPhotoCanvas,
+        Math.round((printWidth - ditheredPhotoCanvas.width) / 2),
+        Math.round((paperHeight - ditheredPhotoCanvas.height) / 2)
+      );
       pCtx.restore();
     }
 
@@ -334,6 +339,17 @@ function render() {
 
   const footerY = paintReceipt(measureCtx, true);
   paperHeight = Math.round(footerY + Math.round(fontSizeBody * 0.3) + padBottom);
+
+  if (loadedImage && isWatermark) {
+    const ratio = loadedImage.width / loadedImage.height;
+    const fitHeight = elements.watermarkFitInput.value === 'height';
+    const wmWidth = fitHeight ? Math.round(paperHeight * ratio) : printWidth;
+    const wmHeight = fitHeight ? paperHeight : Math.round(printWidth / ratio);
+    ditheredPhotoCanvas = getDitheredPhoto(
+      wmWidth, wmHeight, brightness,
+      contrast, ditherMode, palette, ditherScale, colorMode
+    );
+  }
 
   paperCanvas.width = printWidth;
   paperCanvas.height = paperHeight;
@@ -428,6 +444,11 @@ function toggleUIVisibility() {
     if (el) el.style.display = isPhotoOnly ? 'none' : '';
   });
 
+  const watermarkFitRow = elements.watermarkFitInput?.closest('.grid-row');
+  if (watermarkFitRow) {
+    watermarkFitRow.style.display = (!isPhotoOnly && elements.imagePosInput.value === 'background') ? '' : 'none';
+  }
+
   // Palette input is only useful when in mono mode
   const paletteRow = elements.paletteInput?.closest('.grid-row');
   const isMono = elements.colorModeSelect && elements.colorModeSelect.value === 'mono';
@@ -457,6 +478,11 @@ if (elements.colorModeSelect) {
   });
 }
 
+elements.imagePosInput.addEventListener('input', () => {
+  toggleUIVisibility();
+  render();
+});
+
 elements.resetBtn.addEventListener('click', () => {
   elements.widthInput.value = DEFAULTS.width;
   elements.contrastInput.value = DEFAULTS.contrast;
@@ -469,6 +495,8 @@ elements.resetBtn.addEventListener('click', () => {
   elements.aspectInput.value = DEFAULTS.aspect;
   elements.transparentBgInput.checked = DEFAULTS.transparentBg;
   elements.imagePosInput.value = DEFAULTS.imagePos;
+  elements.watermarkFitInput.value = DEFAULTS.watermarkFit;
+  toggleUIVisibility();
   if (elements.layoutSelect) elements.layoutSelect.value = DEFAULTS.layout;
 
   syncLayoutUI();
@@ -507,7 +535,7 @@ elements.imageInput.addEventListener('change', (e) => {
   elements.widthInput, elements.contrastInput, elements.brightnessInput,
   elements.ditherInput, elements.ditherScaleInput, elements.paletteInput,
   elements.transparencyInput, elements.dropoutsInput, elements.tearInput,
-  elements.aspectInput, elements.transparentBgInput, elements.imagePosInput,
+  elements.aspectInput, elements.transparentBgInput, elements.watermarkFitInput,
   elements.headerTitle, elements.headerSub, ...elements.trackInputs
 ].forEach(input => {
   if (input) input.addEventListener('input', render);

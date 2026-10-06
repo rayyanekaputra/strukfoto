@@ -4,6 +4,7 @@ export const elements = {
   aspectInput: document.getElementById('aspectInput'),
   transparentBgInput: document.getElementById('transparentBgInput'),
   imagePosInput: document.getElementById('imagePosInput'),
+  watermarkFitInput: document.getElementById('watermarkFitInput'),
   layoutSelect: document.getElementById('layoutSelect'),
   headerTitle: document.getElementById('headerTitle'),
   headerSub: document.getElementById('headerSub'),
