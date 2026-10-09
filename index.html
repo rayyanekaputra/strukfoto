@@ -23,15 +23,35 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    :root {
+      --grid-line: #DCD7CE;
+      --accent: #DB7E14;
+    }
+
     body {
       background-color: #F2EFE9;
       display: flex;
       justify-content: center;
       min-height: 100vh;
       padding: 20px 16px;
+      overflow-x: clip;
+    }
+
+    /* Guide lines: the column's left/right edges extended down the page */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: max(16px, 50% - 220px);
+      right: max(16px, 50% - 220px);
+      border-left: 1px solid var(--grid-line);
+      border-right: 1px solid var(--grid-line);
+      pointer-events: none;
     }
 
     .app-container {
+      position: relative;
       width: 100%;
       max-width: 440px;
       display: flex;
@@ -52,6 +72,7 @@
       letter-spacing: -0.05em;
       line-height: 0.88;
       margin-bottom: 8px;
+      padding-bottom: 12px;
       white-space: nowrap;
       display: block;
       width: 100%;
@@ -62,6 +83,70 @@
       font-weight: 500;
       opacity: 0.8;
       letter-spacing: -0.01em;
+      width: fit-content;
+      padding-bottom: 10px;
+    }
+
+    /* Dimension markers: a line with end ticks under text outside the container */
+    .measure {
+      position: relative;
+    }
+
+    .measure::after,
+    .card-footer-buttons > *::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 7px;
+      border-left: 1px solid var(--grid-line);
+      border-right: 1px solid var(--grid-line);
+      background: linear-gradient(var(--grid-line), var(--grid-line)) center / 100% 1px no-repeat;
+      pointer-events: none;
+    }
+
+    .card-footer-buttons > * {
+      position: relative;
+    }
+
+    .card-footer-buttons > *::after {
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: 3px;
+      right: 3px;
+    }
+
+    /* Vertical ruler along the column's left edge, 0 at the control grid */
+    .ruler {
+      position: absolute;
+      right: calc(100% + 1px);
+      bottom: -20px;
+      width: 32px;
+      pointer-events: none;
+      background-image:
+        repeating-linear-gradient(var(--accent) 0 1px, transparent 1px 100px),
+        repeating-linear-gradient(var(--grid-line) 0 1px, transparent 1px 50px),
+        repeating-linear-gradient(var(--grid-line) 0 1px, transparent 1px 10px);
+      background-size: 14px 100%, 8px 100%, 4px 100%;
+      background-position: right top;
+      background-repeat: no-repeat;
+    }
+
+    .ruler span {
+      position: absolute;
+      right: 17px;
+      transform: translateY(-50%);
+      font-size: 9px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+    }
+
+    @media (max-width: 559px) {
+      .ruler {
+        display: none;
+      }
     }
 
     /* Grid Layout System */
@@ -80,6 +165,31 @@
 
     .grid-row:first-child {
       margin-top: 0;
+    }
+
+    /* Guide lines: each row border extended to the viewport edges */
+    .grid-row::before,
+    .grid-row:last-child::after,
+    .preview-card::before,
+    .preview-card::after {
+      content: '';
+      position: absolute;
+      left: -100vw;
+      right: -100vw;
+      height: 1px;
+      background: var(--grid-line);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .grid-row::before,
+    .preview-card::before {
+      top: -1px;
+    }
+
+    .grid-row:last-child::after,
+    .preview-card::after {
+      bottom: -1px;
     }
 
     .grid-col {
@@ -318,7 +428,7 @@
       background-color: #121212;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      position: relative;
     }
 
     .btn-save {
@@ -408,6 +518,10 @@
       gap: 12px;
     }
 
+    .site-footer .measure {
+      padding-bottom: 12px;
+    }
+
     .social-links a {
       display: flex;
       align-items: center;
@@ -427,9 +541,11 @@
 
     <!-- Branding Header -->
     <header class="brand-header">
-      <h1 class="brand-title">strukfoto.</h1>
-      <p class="brand-subtitle">client-sided, cuman di browser kamu. no server.</p>
+      <h1 class="brand-title measure">strukfoto.</h1>
+      <p class="brand-subtitle measure">client-sided, cuman di browser kamu. no server.</p>
     </header>
+
+    <div class="ruler" aria-hidden="true"></div>
 
     <!-- Controls Form Grid -->
     <main class="control-grid">
@@ -733,8 +849,8 @@
 
     <!-- Site Footer -->
     <footer class="site-footer">
-      <span>proudly developed by rayyanekaputra.</span>
-      <div class="social-links">
+      <span class="measure">proudly developed by rayyanekaputra.</span>
+      <div class="social-links measure">
         <a href="https://instagram.com/rayyanekaputra" target="_blank" aria-label="Instagram">
           <svg viewBox="0 0 24 24">
             <path
@@ -758,6 +874,24 @@
 
   </div>
   <script type="module" src="./core_logic.mjs"></script>
+  <script type="module">
+    // Ruler labels every 100px; rebuilt only when the page height changes
+    const ruler = document.querySelector('.ruler');
+    const grid = document.querySelector('.control-grid');
+    let labelCount = -1;
+    new ResizeObserver(() => {
+      ruler.style.top = `${grid.offsetTop}px`;
+      const count = Math.floor(ruler.clientHeight / 100) + 1;
+      if (count === labelCount) return;
+      labelCount = count;
+      ruler.replaceChildren(...Array.from({ length: count }, (_, i) => {
+        const label = document.createElement('span');
+        label.style.top = `${i * 100}px`;
+        label.textContent = i * 100;
+        return label;
+      }));
+    }).observe(document.querySelector('.app-container'));
+  </script>
 </body>
 
 </html>
