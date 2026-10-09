@@ -26,6 +26,7 @@
     :root {
       --grid-line: #DCD7CE;
       --accent: #DB7E14;
+      --gutter: 16px;
     }
 
     body {
@@ -33,7 +34,7 @@
       display: flex;
       justify-content: center;
       min-height: 100vh;
-      padding: 20px 16px;
+      padding: 20px var(--gutter);
       overflow-x: clip;
     }
 
@@ -43,8 +44,8 @@
       position: fixed;
       top: 0;
       bottom: 0;
-      left: max(16px, 50% - 220px);
-      right: max(16px, 50% - 220px);
+      left: max(var(--gutter), 50% - 220px);
+      right: max(var(--gutter), 50% - 220px);
       border-left: 1px solid var(--grid-line);
       border-right: 1px solid var(--grid-line);
       pointer-events: none;
@@ -173,10 +174,34 @@
       left: 17px;
     }
 
+    /* Phones: 30% smaller text, wider gutters so the rulers fit */
     @media (max-width: 559px) {
+      :root {
+        --gutter: 56px;
+      }
+
+      html {
+        font-size: 70%;
+      }
+
       .ruler,
+      .screen-ruler {
+        width: 28px;
+        background-size: 8px 100%, 5px 100%, 3px 100%;
+      }
+
+      .ruler span,
       .screen-ruler span {
-        display: none;
+        font-size: 7px;
+      }
+
+      .ruler span,
+      .screen-ruler-right span {
+        right: 10px;
+      }
+
+      .screen-ruler-left span {
+        left: 10px;
       }
     }
 
